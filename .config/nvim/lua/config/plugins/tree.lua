@@ -1,0 +1,67 @@
+return {
+    "nvim-tree/nvim-tree.lua",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function()
+        -- disable netrw at the very start of your init.lua
+        vim.g.loaded_netrw = 1
+        vim.g.loaded_netrwPlugin = 1
+
+        local function on_attach(bufnr)
+            local api = require "nvim-tree.api"
+
+            local function opts(desc)
+                return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
+            end
+
+            vim.keymap.set("n", "r", api.fs.rename_sub, opts("Rename: Omit Filename"))
+            vim.keymap.set("n", "<BS>", api.node.navigate.parent_close, opts("Close Directory"))
+            vim.keymap.set("n", "<CR>", api.node.open.edit, opts("Open"))
+            vim.keymap.set("n", "a", api.fs.create, opts("Create File Or Directory"))
+            vim.keymap.set("n", "y", api.fs.copy.node, opts("Copy"))
+            vim.keymap.set("n", "[g", api.node.navigate.git.prev, opts("Prev Git"))
+            vim.keymap.set("n", "]g", api.node.navigate.git.next, opts("Next Git"))
+            vim.keymap.set("n", "D", api.fs.remove, opts("Delete"))
+            vim.keymap.set("n", "d", api.fs.trash, opts("Trash"))
+            vim.keymap.set("n", "e", api.tree.expand_all, opts("Expand All"))
+            vim.keymap.set("n", "ca", api.fs.copy.absolute_path, opts("Copy Absolute Path"))
+            vim.keymap.set("n", "p", api.fs.paste, opts("Paste"))
+            vim.keymap.set("n", "R", api.tree.reload, opts("Refresh"))
+            vim.keymap.set("n", "u", api.fs.rename_full, opts("Rename: Full Path"))
+            vim.keymap.set("n", "w", api.tree.collapse_all, opts("Collapse"))
+            vim.keymap.set("n", "x", api.fs.cut, opts("Cut"))
+            vim.keymap.set("n", "c", api.fs.copy.filename, opts("Copy Name"))
+            vim.keymap.set("n", "cr", api.fs.copy.relative_path, opts("Copy Relative Path"))
+        end
+
+        -- OR setup with some options
+        require("nvim-tree").setup({
+            on_attach = on_attach,
+            sort = {
+                sorter = "case_sensitive",
+            },
+            view = {
+                width = 50,
+                relativenumber = true,
+            },
+            renderer = {
+                group_empty = true,
+                indent_markers = {
+                    enable = true
+                },
+            },
+            actions = {
+                open_file = {
+                    window_picker = {
+                        enable = false
+                    },
+                },
+            },
+            filters = {
+                custom = { ".DS_Store" },
+            },
+            git = {
+                ignore = false,
+            },
+        })
+    end,
+}

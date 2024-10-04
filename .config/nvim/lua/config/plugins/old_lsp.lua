@@ -1,0 +1,199 @@
+return {
+    -- {
+    --     "VonHeikemen/lsp-zero.nvim",
+    --     branch = "v3.x",
+    --     dependencies = {
+    --         "neovim/nvim-lspconfig",
+    --         "williamboman/mason.nvim",
+    --         "williamboman/mason-lspconfig.nvim",
+    --         "folke/neodev.nvim",
+    --         -- "ray-x/lsp_signature.nvim",
+    --     },
+    --     config = function()
+    --         require("neodev").setup({
+    --             -- add any options here, or leave empty to use the default settings
+    --         })
+    --
+    --
+    --         -- note: diagnostics are not exclusive to lsp servers
+    --         -- so these can be global keybindings
+    --         vim.keymap.set("n", "gl", vim.diagnostic.open_float)
+    --         vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
+    --         vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
+    --
+    --         vim.api.nvim_create_autocmd("LspAttach", {
+    --             desc = "LSP actions",
+    --             callback = function(event)
+    --                 -- Set up lsp_signature
+    --                 -- require("lsp_signature").on_attach({
+    --                 --     bind = true, -- Bind lsp_signature to keybindings
+    --                 --     handler_opts = {
+    --                 --         border = "single"
+    --                 --     },
+    --                 --     hint_enable = true,
+    --                 --     hint_prefix = "👀 ",
+    --                 -- })
+    --
+    --                 -- Mappings
+    --                 vim.keymap.set("n", "K", vim.lsp.buf.hover, { buffer = event.buf, desc = "Hover Window" })
+    --                 vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = event.buf, desc = "Go To Definition" })
+    --                 vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { buffer = event.buf, desc = "Go To Declaration" })
+    --                 vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { buffer = event.buf, desc = "Go To Implementation" })
+    --                 vim.keymap.set("n", "gt", vim.lsp.buf.type_definition, { buffer = event.buf, desc = "Go To Type Definition" })
+    --                 vim.keymap.set("n", "gr", vim.lsp.buf.references, { buffer = event.buf, desc = "Go To References" })
+    --                 vim.keymap.set("n", "gs", vim.lsp.buf.signature_help, { buffer = event.buf, desc = "Signature Help" })
+    --                 vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { buffer = event.buf, desc = "Rename" })
+    --                 vim.keymap.set({ "n", "x" }, "<leader>fm", function() vim.lsp.buf.format({ async = true }) end, { buffer = event.buf, desc = "Format" })
+    --                 vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { buffer = event.buf, desc = "Code Action" })
+    --             end
+    --         })
+    --
+    --         local lsp_capabilities = require("cmp_nvim_lsp").default_capabilities()
+    --
+    --         local default_setup = function(server)
+    --             require("lspconfig")[server].setup({
+    --                 capabilities = lsp_capabilities,
+    --             })
+    --         end
+    --
+    --         require("mason").setup({})
+    --         require("mason-lspconfig").setup({
+    --             ensure_installed = {
+    --                 "bashls",
+    --                 "dockerls",
+    --                 "docker_compose_language_service",
+    --                 "eslint",
+    --                 "jsonls",
+    --                 "tsserver",
+    --                 "lua_ls",
+    --                 "sqlls",
+    --                 "rust_analyzer",
+    --                 "pyright",
+    --                 "ruff_lsp",
+    --             },
+    --             handlers = {
+    --                 default_setup,
+    --                 lua_ls = function()
+    --                     require("lspconfig").lua_ls.setup({
+    --                         capabilities = lsp_capabilities,
+    --                         settings = {
+    --                             Lua = {
+    --                                 completion = {
+    --                                     callSnippet = "Replace"
+    --                                 },
+    --                             },
+    --                         },
+    --                     })
+    --                 end,
+    --                 pyright = function()
+    --                     require("lspconfig").pyright.setup({
+    --                         capabilities = (function()
+    --                             local capabilities = vim.lsp.protocol.make_client_capabilities()
+    --                             capabilities.textDocument.publishDiagnostics.tagSupport.valueSet = { 2 }
+    --                             return capabilities
+    --                         end)(),
+    --                         settings = {
+    --                             pyright = {
+    --                                 disableOrganizeImports = true,
+    --                             },
+    --                             python = {
+    --                                 analysis = {
+    --                                     diagnosticSeverityOverrides = {
+    --                                         reportArgumentType = "warning",
+    --                                         reportOptionalMemberAccess = "warning",
+    --                                         reportReturnType = "warning",
+    --                                         reportUndefinedVariable = "none",
+    --                                         reportUnboundVariable = "warning",
+    --                                         reportUnusedVariable = "warning", -- or anything
+    --                                     },
+    --                                     typeCheckingMode = "standard",
+    --                                     useLibraryCodeForTypes = true,
+    --                                 },
+    --                             },
+    --                         },
+    --                     })
+    --                 end,
+    --                 ruff_lsp = function()
+    --                     require("lspconfig").ruff_lsp.setup({
+    --                         init_options = {
+    --                             lint = {
+    --                                 enable = false,
+    --                             },
+    --                         },
+    --                         capabilities = lsp_capabilities,
+    --                         on_attach = function(client, _)
+    --                             client.server_capabilities.hoverProvider = false
+    --                         end,
+    --                     })
+    --                 end,
+    --
+    --             },
+    --         })
+    --     end,
+    -- },
+    -- {
+    --     "hrsh7th/nvim-cmp",
+    --     event = { "InsertEnter", "CmdlineEnter" },
+    --     dependencies = {
+    --         "hrsh7th/cmp-nvim-lsp",
+    --         "hrsh7th/cmp-path",
+    --         "hrsh7th/cmp-cmdline",
+    --         --           "hrsh7th/cmp-nvim-lsp-signature-help",
+    --         "L3MON4D3/LuaSnip",
+    --     },
+    --     config = function()
+    --         local cmp = require("cmp")
+    --         local cmp_select = { behavior = cmp.SelectBehavior.Select }
+    --
+    --         cmp.setup({
+    --             sources = {
+    --                 { name = "nvim_lsp" },
+    --                 { name = "path" },
+    --                 --                    { name = 'nvim_lsp_signature_help' },
+    --                 {
+    --                     name = "buffer",
+    --                     option = {
+    --                         get_bufnrs = function()
+    --                             return vim.api.nvim_list_bufs()
+    --                         end
+    --                     }
+    --                 },
+    --             },
+    --             mapping = cmp.mapping.preset.insert({
+    --                 -- Enter key confirms completion item
+    --                 ["<C-y>"] = cmp.mapping.confirm({ select = false }),
+    --                 ["<C-p>"] = cmp.mapping.select_prev_item(cmp_select),
+    --                 ["<C-n>"] = cmp.mapping.select_next_item(cmp_select),
+    --                 -- Ctrl + space triggers completion menu
+    --                 ["<C-Space>"] = cmp.mapping.complete(),
+    --             }),
+    --             snippet = {
+    --                 expand = function(args)
+    --                     require("luasnip").lsp_expand(args.body)
+    --                 end,
+    --             },
+    --         })
+    --
+    --         cmp.setup.cmdline("/", {
+    --             mapping = cmp.mapping.preset.cmdline(),
+    --             sources = {
+    --                 { name = "buffer" }
+    --             }
+    --         })
+    --
+    --         cmp.setup.cmdline(":", {
+    --             mapping = cmp.mapping.preset.cmdline(),
+    --             sources = cmp.config.sources({
+    --                 { name = "path" }
+    --             }, {
+    --                 {
+    --                     name = "cmdline",
+    --                     option = {
+    --                         ignore_cmds = { "Man", "!" }
+    --                     }
+    --                 }
+    --             })
+    --         })
+    --     end,
+    -- }
+}
