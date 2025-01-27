@@ -287,9 +287,9 @@ local function DockerCoroutine(docker_command)
 	end)
 end
 
----@param opts table|nil
+---@param opts table
 ---@param cb function
-local function get_docker_inputs(opts, cb)
+local function get_docker_services(opts, cb)
 	local_cwd = vim.fn.getcwd()
 	local docker_compose_filepath = local_cwd .. "/docker-compose.yml"
 	local stat = vim.loop.fs_stat(docker_compose_filepath)
@@ -297,41 +297,7 @@ local function get_docker_inputs(opts, cb)
 		error("docker-compose.yml not found at " .. docker_compose_filepath)
 	end
 
-	opts = vim.tbl_extend("keep", opts or {}, default_port)
-	local input_port = opts.port
-	local port_input_config = {
-		position = "50%",
-		size = {
-			width = 20,
-		},
-		border = {
-			style = "single",
-			text = {
-				top = "[Port]",
-				top_align = "center",
-			},
-		},
-		win_options = {
-			winhighlight = "Normal:Normal,FloatBorder:Normal",
-		},
-	}
-	local port_input_prompt = {
-		prompt = "> ",
-		default_value = input_port,
-		on_close = function()
-			vim.notify("Please input a port")
-		end,
-		on_submit = function(value)
-			port = tonumber(value)
-			if type(port) == "integer" then
-				disconnect_old_session(port)
-			end
-
-			cb()
-		end,
-	}
-
-	if not container or opts.action == "start" then
+	if not container or opts.action == "start" or opts.action == "build" or opts.action == "pytest" then
 		local lines = {}
 		local services = vim.fn.system("yq eval '.services | keys | .[]' " .. docker_compose_filepath)
 		for service in services:gmatch("[^\r\n]+") do
@@ -345,23 +311,20 @@ local function get_docker_inputs(opts, cb)
 			end,
 			on_submit = function(item)
 				container = item.text
+				cb()
 
-				if container == "js_interop" or container == "shared_payload_js_interop" then
-					local ssh = vim.fn.system("ssh-add -L")
-					if ssh == "The agent has no identities." then
-						local add_ssh = vim.fn.system("ssh-add --apple-use-keychain ~/.ssh/id_ssh")
-						vim.notify(add_ssh)
-					end
-				end
-
-				utils.mount_input(port_input_config, port_input_prompt)
+				-- if container == "js_interop" or container == "shared_payload_js_interop" then
+				-- 	local ssh = vim.fn.system("ssh-add -L")
+				-- 	if ssh == "The agent has no identities." then
+				-- 		local add_ssh = vim.fn.system("ssh-add --apple-use-keychain ~/.ssh/id_ssh")
+				-- 		vim.notify(add_ssh)
+				-- 	end
+				-- end
 			end,
 		}
 		services_menu_config = vim.tbl_extend("force", menu_config, services_menu_config)
 		local services_menu = Menu(menu_size, services_menu_config)
 		services_menu:mount()
-	else
-		utils.mount_input(port_input_config, port_input_prompt)
 	end
 end
 
@@ -414,6 +377,85 @@ local function get_host(cb)
 		end,
 	}
 	utils.mount_input(host_input_config, host_input_prompt)
+end
+
+---@param local_port string | nil
+local function get_port_and_attach(local_port)
+	local input_port
+  if local_port == nil then
+    input_port = default_port.port
+  else
+    input_port = local_port
+  end
+
+	local port_input_config = {
+		position = "50%",
+		size = {
+			width = 20,
+		},
+		border = {
+			style = "single",
+			text = {
+				top = "[Port]",
+				top_align = "center",
+			},
+		},
+		win_options = {
+			winhighlight = "Normal:Normal,FloatBorder:Normal",
+		},
+	}
+	local port_input_prompt = {
+		prompt = "> ",
+		default_value = input_port,
+		on_close = function()
+			vim.notify("Please input a port")
+		end,
+		on_submit = function(value)
+			port = tonumber(value)
+			vim.notify("Attempting to attach to container at port: " .. port)
+			if type(port) == "integer" then
+				disconnect_old_session(port)
+			end
+
+			vim.defer_fn(function()
+				M.attach_session({ host = "127.0.0.1" })
+			end, 5000)
+		end,
+	}
+
+	local attach_menu_config = {
+		lines = { Menu.item("Yes"), Menu.item("No") },
+		on_close = function()
+			vim.notify("No Option Selected")
+		end,
+		on_submit = function(item)
+			if item.text == "Yes" then
+				utils.mount_input(port_input_config, port_input_prompt)
+			end
+		end,
+	}
+
+	local attach_menu_size = {
+		position = "50%",
+		size = {
+			width = "10%",
+			height = 2,
+		},
+		border = {
+			style = "rounded",
+			text = {
+				top = "[Attach Debugger]",
+				top_align = "center",
+			},
+		},
+		win_options = {
+			winhighlight = "Normal:Normal,FloatBorder:Normal",
+		},
+	}
+
+	attach_menu_config = vim.tbl_extend("force", menu_config, attach_menu_config)
+	local attach_menu = Menu(attach_menu_size, attach_menu_config)
+	attach_menu:mount()
 end
 
 local function get_shared_payloads_path(cb)
@@ -498,10 +540,11 @@ end
 ---@param delay integer
 ---@param cb function
 local function check_containers(message, up, delay, cb)
-	local result = vim.fn.system("docker compose ps --services --filter 'status=running'")
+	local running = vim.fn.system("docker compose ps --services --filter 'status=running'")
+	local exited = vim.fn.system("docker compose ps --services --filter 'status=exited'")
 
 	local all_running = false
-	if result:gsub("^%s*(.-)%s*$", "%1") == "" or result == "" or result == "nil" then
+	if running:gsub("^%s*(.-)%s*$", "%1") == "" or running == "" or running == "nil" then
 		if up then
 			vim.notify("No containers are running", 4)
 			if StartUpTimer and not StartUpTimer:is_closing() then
@@ -511,9 +554,9 @@ local function check_containers(message, up, delay, cb)
 			vim.notify("All containers have been shut down")
 			container = nil
 
-			vim.defer_fn(function()
-				remove_docker_network()
-			end, 30000)
+			-- vim.defer_fn(function()
+			-- remove_docker_network()
+			-- end, 30000)
 
 			if ShutDownTimer and not ShutDownTimer:is_closing() then
 				ShutDownTimer:close()
@@ -525,8 +568,15 @@ local function check_containers(message, up, delay, cb)
 
 	if up then
 		-- Split the result into lines
-		local lines = result:gmatch("[^\r\n]+")
-		for line in lines do
+		local lines = {}
+		for running_line in running:gmatch("[^\r\n]+") do
+			table.insert(lines, running_line)
+		end
+		for exited_line in exited:gmatch("[^\r\n]+") do
+			table.insert(lines, exited_line)
+		end
+
+		for _, line in ipairs(lines) do
 			if line == container then
 				vim.notify("All containers are up and running.")
 				all_running = true
@@ -535,43 +585,76 @@ local function check_containers(message, up, delay, cb)
 					StartUpTimer:close()
 				end
 
-				if container == "shared_payload_data_api" or container == "extended_data_api" then
-					local attach_menu_config = {
-						lines = { Menu.item("Yes"), Menu.item("No") },
-						on_close = function()
-							vim.notify("No Option Selected")
-						end,
-						on_submit = function(item)
-							if item.text == "Yes" then
-								vim.defer_fn(function()
-									M.attach_session({ host = "127.0.0.1" })
-								end, 10000)
-							end
-						end,
-					}
-
-					local attach_menu_size = {
-						position = "50%",
-						size = {
-							width = "10%",
-							height = 2,
-						},
-						border = {
-							style = "rounded",
-							text = {
-								top = "[Attach Debugger]",
-								top_align = "center",
-							},
-						},
-						win_options = {
-							winhighlight = "Normal:Normal,FloatBorder:Normal",
-						},
-					}
-
-					attach_menu_config = vim.tbl_extend("force", menu_config, attach_menu_config)
-					local attach_menu = Menu(attach_menu_size, attach_menu_config)
-					attach_menu:mount()
-				end
+        get_port_and_attach()
+				-- local input_port = default_port.port
+				-- local port_input_config = {
+				-- 	position = "50%",
+				-- 	size = {
+				-- 		width = 20,
+				-- 	},
+				-- 	border = {
+				-- 		style = "single",
+				-- 		text = {
+				-- 			top = "[Port]",
+				-- 			top_align = "center",
+				-- 		},
+				-- 	},
+				-- 	win_options = {
+				-- 		winhighlight = "Normal:Normal,FloatBorder:Normal",
+				-- 	},
+				-- }
+				-- local port_input_prompt = {
+				-- 	prompt = "> ",
+				-- 	default_value = input_port,
+				-- 	on_close = function()
+				-- 		vim.notify("Please input a port")
+				-- 	end,
+				-- 	on_submit = function(value)
+				-- 		port = tonumber(value)
+				-- 		vim.notify("Attempting to attach to container at port: " .. port)
+				-- 		if type(port) == "integer" then
+				-- 			disconnect_old_session(port)
+				-- 		end
+				--
+				-- 		vim.defer_fn(function()
+				-- 			M.attach_session({ host = "127.0.0.1" })
+				-- 		end, 5000)
+				-- 	end,
+				-- }
+				--
+				-- local attach_menu_config = {
+				-- 	lines = { Menu.item("Yes"), Menu.item("No") },
+				-- 	on_close = function()
+				-- 		vim.notify("No Option Selected")
+				-- 	end,
+				-- 	on_submit = function(item)
+				-- 		if item.text == "Yes" then
+				-- 			utils.mount_input(port_input_config, port_input_prompt)
+				-- 		end
+				-- 	end,
+				-- }
+				--
+				-- local attach_menu_size = {
+				-- 	position = "50%",
+				-- 	size = {
+				-- 		width = "10%",
+				-- 		height = 2,
+				-- 	},
+				-- 	border = {
+				-- 		style = "rounded",
+				-- 		text = {
+				-- 			top = "[Attach Debugger]",
+				-- 			top_align = "center",
+				-- 		},
+				-- 	},
+				-- 	win_options = {
+				-- 		winhighlight = "Normal:Normal,FloatBorder:Normal",
+				-- 	},
+				-- }
+				--
+				-- attach_menu_config = vim.tbl_extend("force", menu_config, attach_menu_config)
+				-- local attach_menu = Menu(attach_menu_size, attach_menu_config)
+				-- attach_menu:mount()
 			end
 		end
 	end
@@ -611,75 +694,75 @@ local function check_container(local_container, delay, cb)
 	end
 end
 
----@param test_file boolean
-function M.run_pytest(test_file)
+---@param opts table
+function M.run_pytest(opts)
 	-- local dap = load_dap()
 	name = "Data API Pytest"
 
-	get_docker_inputs({ port = "6000", action = "pytest" }, function()
+	get_docker_services({ action = "pytest" }, function()
+		-- vim.notify("Pytest listening at port: " .. port)
 		local class = nil
 		local function_name = nil
-		if not test_file then
-			local function_node = closest_above_cursor(get_function_nodes())
-			if not function_node then
-				vim.notify("No suitable test method found")
-				return
+		local args = { "compose", "exec", container, "pytest" }
+
+		if opts.type ~= "all" then
+			if opts.type == "function" then
+				local function_node = closest_above_cursor(get_function_nodes())
+				if not function_node then
+					vim.notify("No suitable test method found")
+					return
+				end
+				class = get_parent_classname(function_node)
+				function_name = get_node_text(function_node)
 			end
-			class = get_parent_classname(function_node)
-			function_name = get_node_text(function_node)
-		end
-		local test_path = get_test_path(class, function_name)
-
-		if container == "shared_payload_load_data" or container == "shared_payload_js_interop" then
-			container = "shared_payload_data_api"
-		elseif container == "load_data" or container == "js_interop" then
-			container = "extended_data_api"
+			local test_path = get_test_path(class, function_name)
+			vim.notify("Running Pytest for " .. test_path)
+			table.insert(args, test_path)
 		end
 
-		vim.notify("Pytest listening at port: " .. port)
-		vim.notify("Running Pytest for " .. test_path)
-		local args = { "compose", "exec", container, "pytest", test_path }
 		execute_remote_docker_command(args, function(code, signal, output)
-      vim.notify("Finished Pytest Process with code " .. code .. " and signal " .. signal)
+			vim.notify("Finished Pytest Process with code " .. code .. " and signal " .. signal)
 			local bufnr = utils.open_vertical_split()
 			utils.stream_to_buffer(bufnr, output)
 		end)
 
-		local attach_menu_config = {
-			lines = { Menu.item("Yes"), Menu.item("No") },
-			on_close = function()
-				vim.notify("No Option Selected")
-			end,
-			on_submit = function(item)
-				if item.text == "Yes" then
-					vim.defer_fn(function()
-						M.attach_session({ host = "127.0.0.1" })
-					end, 20000)
-				end
-			end,
-		}
+    get_port_and_attach("6000")
 
-		local attach_menu_size = {
-			position = "50%",
-			size = {
-				width = "10%",
-				height = 2,
-			},
-			border = {
-				style = "rounded",
-				text = {
-					top = "[Attach Debugger]",
-					top_align = "center",
-				},
-			},
-			win_options = {
-				winhighlight = "Normal:Normal,FloatBorder:Normal",
-			},
-		}
-
-		attach_menu_config = vim.tbl_extend("force", menu_config, attach_menu_config)
-		local attach_menu = Menu(attach_menu_size, attach_menu_config)
-		attach_menu:mount()
+		-- local attach_menu_config = {
+		-- 	lines = { Menu.item("Yes"), Menu.item("No") },
+		-- 	on_close = function()
+		-- 		vim.notify("No Option Selected")
+		-- 	end,
+		-- 	on_submit = function(item)
+		-- 		if item.text == "Yes" then
+		-- 			vim.defer_fn(function()
+		-- 				M.attach_session({ host = "127.0.0.1" })
+		-- 			end, 20000)
+		-- 		end
+		-- 	end,
+		-- }
+		--
+		-- local attach_menu_size = {
+		-- 	position = "50%",
+		-- 	size = {
+		-- 		width = "10%",
+		-- 		height = 2,
+		-- 	},
+		-- 	border = {
+		-- 		style = "rounded",
+		-- 		text = {
+		-- 			top = "[Attach Debugger]",
+		-- 			top_align = "center",
+		-- 		},
+		-- 	},
+		-- 	win_options = {
+		-- 		winhighlight = "Normal:Normal,FloatBorder:Normal",
+		-- 	},
+		-- }
+		--
+		-- attach_menu_config = vim.tbl_extend("force", menu_config, attach_menu_config)
+		-- local attach_menu = Menu(attach_menu_size, attach_menu_config)
+		-- attach_menu:mount()
 	end)
 	-- local function on_terminated(session, body)
 	--     local lsession = session
@@ -730,7 +813,7 @@ local function create_docker_network(opts, cb)
 				vim.notify("The " .. network .. " docker network already exists.")
 			end
 			if opts and opts.action == "start" and type(cb) == "function" then
-				get_docker_inputs(opts, cb)
+				get_docker_services(opts, cb)
 			end
 		end,
 	}
@@ -739,7 +822,7 @@ local function create_docker_network(opts, cb)
 		if network_check == "" then
 			utils.mount_input(network_input_config, network_input_prompt)
 		elseif opts and opts.action == "start" and type(cb) == "function" then
-			get_docker_inputs(opts, cb)
+			get_docker_services(opts, cb)
 		end
 	else
 		utils.mount_input(network_input_config, network_input_prompt)
@@ -772,6 +855,44 @@ function M.get_docker_dependencies(opts, cb)
 	end
 end
 
+function M.show_containers()
+	local containers = vim.fn.system("docker ps")
+
+	vim.notify(containers)
+end
+
+function M.list_image()
+	local images = vim.fn.system("docker image ls")
+
+	vim.notify(images)
+end
+
+function M.prune_image()
+	local image = vim.fn.system("docker image prune -f")
+
+	vim.notify(image)
+end
+
+function M.prune_volume()
+	local volume = vim.fn.system("docker volume prune -f")
+
+	vim.notify(volume)
+end
+
+function M.prune_system()
+	local system = vim.fn.system("docker system prune -af")
+
+	vim.notify(system)
+end
+
+function M.build_containers()
+	get_docker_services({ action = "build" }, function()
+		load_dap().defaults.python.exception_breakpoints = { "default" }
+		local docker_command = string.format("docker compose build --no-cache " .. container)
+		execute_docker_command(docker_command)
+	end)
+end
+
 function M.start_containers()
 	if ShutDownTimer and not ShutDownTimer:is_closing() then
 		ShutDownTimer:close()
@@ -779,49 +900,49 @@ function M.start_containers()
 
 	name = "Data API"
 
-	M.get_docker_dependencies({ action = "start" }, function()
-		get_shared_payloads_path(function()
-			load_dap().defaults.python.exception_breakpoints = { "default" }
-			local docker_command = string.format("docker compose up -d " .. container)
-			-- local ok, result = pcall(execute_docker_command, docker_command, function()
-			execute_docker_command(docker_command, function()
-				vim.notify("Data API listening at port: " .. port)
-				StartUpTimer = vim.defer_fn(function()
-					-- Terminate the process if it takes longer than 5 minutes
-					vim.notify("Containers are taking too long to start. Please check the container statuses manually.")
-				end, 60000) -- 60000 milliseconds = 1 minutes
+	-- M.get_docker_dependencies({ action = "start" }, function()
+	-- get_shared_payloads_path(function()
+	get_docker_services({ action = "start" }, function()
+		load_dap().defaults.python.exception_breakpoints = { "default" }
+		local docker_command = string.format("docker compose up -d " .. container)
+		-- local ok, result = pcall(execute_docker_command, docker_command, function()
+		execute_docker_command(docker_command, function()
+			StartUpTimer = vim.defer_fn(function()
+				-- Terminate the process if it takes longer than 5 minutes
+				vim.notify("Containers are taking too long to start. Please check the container statuses manually.")
+			end, 60000) -- 60000 milliseconds = 1 minutes
 
-				vim.notify("Checking container statuses...")
+			vim.notify("Checking container statuses...")
 
-				local message = "The " .. container .. " container is still booting up"
-				-- Schedule the asynchronous function to be executed asynchronously in the next event loop iteration
-				vim.defer_fn(function()
-					check_containers(message, true, 15000, check_containers)
-				end, 10000)
-			end)
-			-- assert(ok, result)
-
-			-- if container == "shared_payload_load_data" then
-			--     container = "shared_payload_data_api"
-			-- end
-
-			-- execute_docker_command(docker_command, function()
-			-- 	vim.notify("Data API listening at port: " .. port)
-			-- 	StartUpTimer = vim.defer_fn(function()
-			-- 		-- Terminate the process if it takes longer than 5 minutes
-			-- 		vim.notify("Containers are taking too long to start. Please check the container statuses manually.")
-			-- 	end, 300000) -- 300000 milliseconds = 5 minutes
-			--
-			-- 	vim.notify("Checking container statuses...")
-			--
-			-- 	local message = "The " .. container .. " container is still booting up"
-			-- 	-- Schedule the asynchronous function to be executed asynchronously in the next event loop iteration
-			-- 	vim.defer_fn(function()
-			-- 		check_containers(message, true, 15000, check_containers)
-			-- 	end, 10000)
-			-- end)
+			local message = "The " .. container .. " container is still booting up"
+			-- Schedule the asynchronous function to be executed asynchronously in the next event loop iteration
+			vim.defer_fn(function()
+				check_containers(message, true, 15000, check_containers)
+			end, 10000)
 		end)
+		-- assert(ok, result)
+
+		-- if container == "shared_payload_load_data" then
+		--     container = "shared_payload_data_api"
+		-- end
+
+		-- execute_docker_command(docker_command, function()
+		-- 	vim.notify("Data API listening at port: " .. port)
+		-- 	StartUpTimer = vim.defer_fn(function()
+		-- 		-- Terminate the process if it takes longer than 5 minutes
+		-- 		vim.notify("Containers are taking too long to start. Please check the container statuses manually.")
+		-- 	end, 300000) -- 300000 milliseconds = 5 minutes
+		--
+		-- 	vim.notify("Checking container statuses...")
+		--
+		-- 	local message = "The " .. container .. " container is still booting up"
+		-- 	-- Schedule the asynchronous function to be executed asynchronously in the next event loop iteration
+		-- 	vim.defer_fn(function()
+		-- 		check_containers(message, true, 15000, check_containers)
+		-- 	end, 10000)
+		-- end)
 	end)
+	-- end)
 end
 
 function M.remove_container()

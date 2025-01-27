@@ -71,7 +71,7 @@ opts.desc = "No Action"
 vim.keymap.set("n", "Q", "<nop>", opts)
 
 opts.desc = "Grant File Permissions"
-vim.keymap.set("n", "<leader>x", "<cmd>!chmod +x %<CR>", opts)
+vim.keymap.set("n", "<leader>xp", "<cmd>!chmod +x %<CR>", opts)
 
 opts.desc = "Open QuickFix List"
 vim.keymap.set("n", "<leader>qf", ":copen<CR>", opts)
@@ -88,12 +88,26 @@ opts.desc = "Toggle File Explorer With Current File"
 vim.keymap.set("n", "<leader>tf", ":NvimTreeFindFileToggle<CR>", opts)
 
 opts.desc = "Run Docker Pytest for Function"
-vim.keymap.set("n", "<leader>dm", function() require("config.core.docker").run_pytest(false) end, opts)
+vim.keymap.set("n", "<leader>dm", function() require("config.core.docker").run_pytest({ type = "function" }) end, opts)
 opts.desc = "Run Docker Pytest for File"
-vim.keymap.set("n", "<leader>df", function() require("config.core.docker").run_pytest(true) end, opts)
+vim.keymap.set("n", "<leader>df", function() require("config.core.docker").run_pytest({ type = "file" }) end, opts)
+opts.desc = "Run Docker All Pytest"
+vim.keymap.set("n", "<leader>dpy", function() require("config.core.docker").run_pytest({ type = "all" }) end, opts)
 opts.desc = "Attach to Docker"
 vim.keymap.set("n", "<leader>da", function() require("config.core.docker").attach_session() end, opts)
 
+opts.desc = "Docker Show Containers"
+vim.keymap.set("n", "<leader>ds", function() require("config.core.docker").show_containers() end, opts)
+opts.desc = "Docker Image List"
+vim.keymap.set("n", "<leader>dil", function() require("config.core.docker").list_image() end, opts)
+opts.desc = "Docker Image Prune"
+vim.keymap.set("n", "<leader>dpi", function() require("config.core.docker").prune_image() end, opts)
+opts.desc = "Docker Volume Prune"
+vim.keymap.set("n", "<leader>dpv", function() require("config.core.docker").prune_volume() end, opts)
+opts.desc = "Docker System Prune"
+vim.keymap.set("n", "<leader>dps", function() require("config.core.docker").prune_system() end, opts)
+opts.desc = "Docker Compose Build"
+vim.keymap.set("n", "<leader>dcb", function() require("config.core.docker").build_containers() end, opts)
 opts.desc = "Docker Compose Up"
 vim.keymap.set("n", "<leader>dcu", function() require("config.core.docker").start_containers() end, opts)
 opts.desc = "Docker Compose Down"
@@ -117,7 +131,7 @@ opts.silent = false
 opts.desc = "Search and Replace Yanked"
 vim.keymap.set("n", "<C-s>y", [[:%s/<C-r><C-w>/<C-r>0/gI<Left><Left><Left>]], opts)
 opts.desc = "Search and Replace Cursor"
-vim.keymap.set("n", "<C-s>", [[:%s/\<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], opts)
+vim.keymap.set("n", "<C-s>", [[:%s/<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], opts)
 
 opts.desc = "Debugger Rust Testables"
 vim.keymap.set("n", "<leader>drt", function() vim.cmd("RustLsp testables") end, opts)

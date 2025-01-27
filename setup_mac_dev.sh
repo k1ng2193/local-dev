@@ -12,10 +12,6 @@ bolderr() {
   echo -e "Error:$(tput sgr0) $1\n"
 }
 
-boldinfo "Copying ZSH Env Startup Files"
-cp ./.zprofile ~/.zprofile
-cp ./.zshrc ~/.zshrc
-
 boldinfo "Navigating to the home directory"
 cd ~ || exit
 
@@ -28,8 +24,8 @@ else
   brew update
 fi
 
-brew install iterm2 --cask
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+brew install --cask ghostty
+brew install starship
 
 brew install git
 brew install gh
@@ -60,8 +56,13 @@ brew install s4cmd
 brew install neovim
 brew install tmux
 brew install postgresql
-brew install python@3.11
-brew install pyenv-virtualenv
+brew install uv
 brew install node@18
 brew install nginx
-brew install watchman
+
+boldinfo "Creating ZSH Env Startup Files Symlinks"
+ln -s ./.zprofile ~/.zprofile
+ln -s ./.zshrc ~/.zshrc
+
+boldinfo "Creating Config Directory Symlink"
+ln -s ./.config ~/.config

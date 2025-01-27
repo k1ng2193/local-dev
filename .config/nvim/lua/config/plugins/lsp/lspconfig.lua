@@ -60,7 +60,7 @@ return {
 				keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
 
 				opts.desc = "Show Buffer Diagnostics"
-				keymap.set("n", "gb", "<cmd>Telescope diagnostics bufnr=0<CR>", opts)
+				keymap.set("n", "bd", "<cmd>Telescope diagnostics bufnr=0<CR>", opts)
 
 				opts.desc = "Show Line Diagnostics"
 				keymap.set("n", "gl", vim.diagnostic.open_float, opts)
@@ -90,14 +90,13 @@ return {
 				"bashls",
 				"dockerls",
 				"docker_compose_language_service",
-				"eslint",
 				"jsonls",
-				"tsserver",
+				"ts_ls",
 				"lua_ls",
 				"sqlls",
 				"rust_analyzer",
 				"pyright",
-				"ruff_lsp",
+				"ruff",
 			},
 		})
 
@@ -107,8 +106,8 @@ return {
 					capabilities = lsp_capabilities,
 				})
 			end,
-			["tsserver"] = function()
-				lspconfig["tsserver"].setup({
+			["ts_ls"] = function()
+				lspconfig["ts_ls"].setup({
 					capabilities = lsp_capabilities,
 					settings = {
 						typescript = {
@@ -192,7 +191,7 @@ return {
 									reportReturnType = "warning",
 									reportUndefinedVariable = "warning",
 									reportUnboundVariable = "warning",
-                  reportUnusedImport = "none",
+									reportUnusedImport = "none",
 									reportUnusedVariable = "warning", -- or anything
 								},
 								typeCheckingMode = "standard",
@@ -234,16 +233,45 @@ return {
 					},
 				})
 			end,
-			["ruff_lsp"] = function()
-				lspconfig["ruff_lsp"].setup({
+			["ruff"] = function()
+				lspconfig["ruff"].setup({
+					-- cmd = { vim.fn.stdpath("data") .. "/mason/bin/ruff" },
 					init_options = {
-						lint = {
-							enable = true,
+						settings = {
+							-- Complexity (equivalent to --max-complexity)
+							lint = {
+                enable = false,
+							},
+
+							-- Line length and complexity
+							line_length = 100,
+							preview = true,
+
+							-- Selected and ignored rules
+							select = {
+								"B", -- flake8-bugbear
+								"C", -- mccabe/complexity
+								"E", -- pycodestyle errors
+								"F", -- pyflakes
+								"W", -- pycodestyle warnings
+								"T4", -- type checking
+								"B9", -- bugbear opinions
+							},
+							ignore = {
+								"E266", -- too many leading '#' for block comment
+								"E501", -- line too long
+								"W503", -- line break before binary operator
+								"E203", -- whitespace before ':'
+								"F401", -- unused imports
+								"F841", -- unused variable
+							},
 						},
 					},
 					capabilities = lsp_capabilities,
 					on_attach = function(client, _)
-						client.server_capabilities.hoverProvider = false
+						if client.name == "ruff" then
+							client.server_capabilities.hoverProvider = false
+						end
 					end,
 				})
 			end,

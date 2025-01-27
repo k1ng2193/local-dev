@@ -4,23 +4,24 @@ return {
 	config = function()
 		local lint = require("lint")
 
-    lint.linters.flake8.args = {
-      "--max-line-length=100",
-      "--max-complexity=18",
-      "--select=B,C,E,F,W,T4,B9",
-      "--ignore=E266,E501,W503,E203,F401",
+    -- lint.linters.flake8.args = {
+    --   "--max-line-length=100",
+    --   "--max-complexity=18",
+    --   "--select=B,C,E,F,W,T4,B9",
+    --   "--ignore=E266,E501,W503,E203,F401",
+    -- }
+
+    lint.linters.yamllint.args = {
+      "-d",
+      "{extends: default, rules: {line-length: {max: 100}}}",
     }
 
 		lint.linters_by_ft = {
-			-- javascript = { "eslint" },
-			-- typescript = { "eslint" },
-			-- javascriptreact = { "eslint" },
-			-- typescriptreact = { "eslint" },
 			javascript = { "eslint_d" },
 			typescript = { "eslint_d" },
 			javascriptreact = { "eslint_d" },
 			typescriptreact = { "eslint_d" },
-			python = { "flake8" },
+			-- python = { "ruff" },
 			json = { "jsonlint" },
 			yaml = { "yamllint" },
       sh = { "shellcheck" },
