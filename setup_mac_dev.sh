@@ -73,3 +73,6 @@ ln -s ~/local-dev/.config ~/.config
 boldinfo "Installing tmux plugins"
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 ~/.tmux/plugins/tpm/bin/install_plugins
+
+boldinfo "Building bat CLI cache"
+bat cache --build
