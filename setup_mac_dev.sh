@@ -66,3 +66,7 @@ ln -s ./.zshrc ~/.zshrc
 
 boldinfo "Creating Config Directory Symlink"
 ln -s ./.config ~/.config
+
+boldinfo "Installing tmux plugins"
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+~/.tmux/plugins/tpm/bin/install_plugins
