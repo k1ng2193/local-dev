@@ -50,8 +50,7 @@ brew install opensc
 brew install tcptraceroute
 
 # AWS CLI
-curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
-sudo installer -pkg AWSCLIV2.pkg -target /
+brew install awscli
 brew install s4cmd
 
 brew install neovim
