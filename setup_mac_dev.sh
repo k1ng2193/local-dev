@@ -19,6 +19,7 @@ cd ~ || exit
 if ! command -v brew &>/dev/null; then
   boldinfo "Installing Homebrew Package Manager"
   curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+  eval "$(/opt/homebrew/bin/brew shellenv)"
 else
   boldinfo "Updating Homebrew Package Manager"
   brew update
@@ -58,14 +59,16 @@ brew install tmux
 brew install postgresql
 brew install uv
 brew install node@18
+brew install yarn
 brew install nginx
 
 boldinfo "Creating ZSH Env Startup Files Symlinks"
-ln -s ./.zprofile ~/.zprofile
-ln -s ./.zshrc ~/.zshrc
+cd ~ || exit
+ln -s ~/local-dev/.zprofile ~/.zprofile
+ln -s ~/local-dev/.zshrc ~/.zshrc
 
 boldinfo "Creating Config Directory Symlink"
-ln -s ./.config ~/.config
+ln -s ~/local-dev/.config ~/.config
 
 boldinfo "Installing tmux plugins"
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm

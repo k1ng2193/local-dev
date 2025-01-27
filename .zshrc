@@ -136,9 +136,9 @@ _fzf_comprun() {
 export BAT_THEME="Catppuccin Mocha"
 
 # eval "$(luarocks path --bin)"
-export PATH="/usr/local/opt/node@18/bin:$PATH"
+export PATH="/opt/homebrew/opt/node@18/bin:$PATH"
 
-export PATH="/usr/local/opt/openjdk@21/bin:$PATH"
+export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"
 # export JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home"
 # export PATH="$JAVA_HOME/bin:$PATH"
 

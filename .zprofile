@@ -32,3 +32,5 @@ eval "$(pyenv virtualenv-init -)"
 
 # Load .zshrc if it exists
 # test -f ~/.zshrc && source ~/.zshrc
+
+eval "$(/opt/homebrew/bin/brew shellenv)"
