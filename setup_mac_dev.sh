@@ -27,6 +27,7 @@ fi
 brew install --cask ghostty
 brew install starship
 
+brew install git
 brew install gh
 brew install jq
 brew install yq
