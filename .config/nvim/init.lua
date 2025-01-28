@@ -1,4 +1,4 @@
-local home_dir = os.getenv("HOME") or "~"
+-- local home_dir = os.getenv("HOME") or "~"
 
 -- local local_lua_path = home_dir .. "/.luarocks/share/lua/5.4/?.lua"
 

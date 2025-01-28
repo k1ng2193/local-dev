@@ -9,7 +9,9 @@ eval "$(starship init zsh)"
 zinit ice depth=1
 zinit light jeffreytse/zsh-vi-mode
 
-alias ls="eza --color=always --long --git --icons=always --no-user --no-permissions"
+export GH_CONFIG_DIR=~/gh
+
+alias ls="eza --color=always --long --git --icons=always --no-user"
 alias profile="aws s3 ls --profile"
 sso() {
     export AWS_PROFILE="$1"

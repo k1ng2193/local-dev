@@ -1,5 +1,6 @@
 return {
     "ThePrimeagen/git-worktree.nvim",
+    dependencies = { 'nvim-telescope/telescope.nvim' },
     event = { "BufEnter", "BufNewFile" },
     config = function()
         local work_tree = require("git-worktree")
