@@ -240,7 +240,7 @@ return {
 						settings = {
 							-- Complexity (equivalent to --max-complexity)
 							lint = {
-                enable = false,
+								enable = false,
 							},
 
 							-- Line length and complexity
