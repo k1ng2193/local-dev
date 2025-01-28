@@ -1,0 +1,63 @@
+#!/bin/bash
+
+boldinfo() {
+  tput bold
+  tput setaf 45
+  echo -e "INFO:$(tput sgr0) $1\n"
+}
+
+bolderr() {
+  tput bold
+  tput setaf 1
+  echo -e "Error:$(tput sgr0) $1\n"
+}
+
+boldinfo "Navigating to the home directory"
+cd ~ || exit
+
+# Homebrew package manager
+if ! command -v brew &>/dev/null; then
+  boldinfo "Installing Homebrew Package Manager"
+  curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+else
+  boldinfo "Updating Homebrew Package Manager"
+  brew update
+fi
+
+boldinfo "Installing Terminal Environment Dependencies"
+brew install --cask ghostty
+brew install starship
+brew install git
+brew install gh
+brew install jq
+brew install yq
+brew install awk
+brew install ripgrep
+brew install bat
+brew install btop
+brew install atuin
+brew install fzf
+git clone https://github.com/junegunn/fzf-git.sh
+brew install tldr
+brew install fd
+brew install eza
+brew install trash
+brew install font-sauce-code-pro-nerd-font
+brew install openssl
+brew install openssh
+brew install opensc
+brew install tcptraceroute
+
+boldinfo "Installing AWS Dependencies"
+brew install awscli
+brew install s4cmd
+
+boldinfo "Installing Developer Environment"
+brew install neovim
+brew install tmux
+brew install postgresql
+brew install uv
+brew install node@18
+brew install yarn
+brew install nginx
