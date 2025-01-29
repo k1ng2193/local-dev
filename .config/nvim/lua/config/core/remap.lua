@@ -137,5 +137,3 @@ vim.keymap.set("n", "<C-s>r", [[:cdo %s/<C-r><C-w>/<C-r>0/gcI<Left><Left><Left>]
 
 opts.desc = "Debugger Rust Testables"
 vim.keymap.set("n", "<leader>drt", function() vim.cmd("RustLsp testables") end, opts)
-
-
