@@ -20,7 +20,7 @@ return {
 			trouble.prev("diagnostics")
 			trouble.jump("diagnostics")
 		end, { desc = "Previous Trouble Diagnostic" })
-		vim.keymap.set("n", "<leader>xq", function()
+		vim.keymap.set("n", "<leader>qf", function()
 			trouble.toggle("quickfix")
 		end, { desc = "Toggle Quickfix Window" })
 		vim.keymap.set("n", "<leader>qc", function()
