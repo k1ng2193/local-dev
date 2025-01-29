@@ -132,6 +132,8 @@ opts.desc = "Search and Replace Yanked"
 vim.keymap.set("n", "<C-s>y", [[:%s/<C-r><C-w>/<C-r>0/gI<Left><Left><Left>]], opts)
 opts.desc = "Search and Replace Cursor"
 vim.keymap.set("n", "<C-s>", [[:%s/<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], opts)
+opts.desc = "Search and Replace Yanked QuickFix"
+vim.keymap.set("n", "<C-s>r", [[:cdo %s/<C-r><C-w>/<C-r>0/gcI<Left><Left><Left>]], opts)
 
 opts.desc = "Debugger Rust Testables"
 vim.keymap.set("n", "<leader>drt", function() vim.cmd("RustLsp testables") end, opts)
