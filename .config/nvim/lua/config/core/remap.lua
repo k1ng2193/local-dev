@@ -73,16 +73,14 @@ vim.keymap.set("n", "Q", "<nop>", opts)
 opts.desc = "Grant File Permissions"
 vim.keymap.set("n", "<leader>xp", "<cmd>!chmod +x %<CR>", opts)
 
-opts.desc = "Open QuickFix List"
-vim.keymap.set("n", "<leader>qf", ":copen<CR>", opts)
-vim.cmd[[
-    augroup quickfix_keymap
-        autocmd!
-        autocmd FileType qf lua vim.api.nvim_buf_set_keymap(0, "n", "<CR>", "<CR>:cclose<CR>", {})
-        augroup END
-]]
-opts.desc = "Clear QuickFix List"
-vim.keymap.set("n", "<leader>qc", ":cexpr []<CR>", opts)
+-- opts.desc = "Open QuickFix List"
+-- vim.keymap.set("n", "<leader>qf", ":copen<CR>", opts)
+-- vim.cmd[[
+--     augroup quickfix_keymap
+--         autocmd!
+--         autocmd FileType qf lua vim.api.nvim_buf_set_keymap(0, "n", "<CR>", "<CR>:cclose<CR>", {})
+--         augroup END
+-- ]]
 
 opts.desc = "Toggle File Explorer"
 vim.keymap.set("n", "<leader>t", ":NvimTreeToggle<CR>", opts)

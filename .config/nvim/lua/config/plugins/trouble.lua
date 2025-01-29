@@ -24,7 +24,7 @@ return {
 			trouble.toggle("quickfix")
 		end, { desc = "Toggle Quickfix Window" })
 		vim.keymap.set("n", "<leader>qc", function()
-			vim.cmd(":cexpr []<CR>")
+			vim.cmd(":cexpr []")
 			trouble.close("quickfix")
 		end, { noremap = true, silent = true, desc = "Clear QuickFix List" })
 		vim.keymap.set("n", "<leader>xl", function()
