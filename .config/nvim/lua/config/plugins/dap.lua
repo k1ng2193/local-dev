@@ -11,10 +11,11 @@ return {
         vim.fn.sign_define("DapBreakpoint", { text = "🛑", texthl = "", linehl = "", numhl = "" })
         vim.fn.sign_define("DapStopped", { text = "🤔", texthl = "", linehl = "", numhl = "" })
 
-        dappy.resolve_python = function()
-          return "/Users/k1ng/.pyenv/shims/python"
-        end
-        dappy.setup("~/.virtualenvs/debugpy/bin/python")
+        -- dappy.resolve_python = function()
+        --   return "/Users/k1ng/.pyenv/shims/python"
+        -- end
+        -- dappy.setup("~/.virtualenvs/debugpy/bin/python")
+        dappy.setup("uv")
         dappy.test_runner = "pytest"
 
         vim.keymap.set("n", "<leader>db", function() dap.toggle_breakpoint() end, { noremap = true, silent = true, desc = "Toggle Breakpoint" })
@@ -41,7 +42,7 @@ return {
         table.insert(dap.configurations.python, {
             type = "python",
             request = "launch",
-            name = "Lanch Pipeline Configuration",
+            name = "Launch Pipeline Configuration",
             program = "${file}",
             args = function()
                 local args_string = vim.fn.input("Arguments: ")

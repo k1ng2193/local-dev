@@ -100,6 +100,7 @@ return {
 			},
 		})
 
+    local utils = require("config.core.utils")
 		mason_lspconfig.setup_handlers({
 			function(server)
 				lspconfig[server].setup({
@@ -152,6 +153,10 @@ return {
 			end,
 			["pyright"] = function()
 				lspconfig["pyright"].setup({
+					on_new_config = function(new_config, workspace_dir)
+						-- Activate virtualenv before LSP starts
+						utils.activate_venv()
+					end,
 					capabilities = lsp_capabilities,
 					settings = {
 						pyright = {

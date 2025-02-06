@@ -4,6 +4,7 @@ return {
     event = { "BufEnter", "BufNewFile" },
     config = function()
         local work_tree = require("git-worktree")
+        local utils = require("config.core.utils")
         work_tree.setup({
             change_directory_command = "cd",
             update_on_change = true,
@@ -15,6 +16,8 @@ return {
         work_tree.on_tree_change(function(op, metadata)
             if op == work_tree.Operations.Switch then
                 print("Switched from " .. metadata.prev_path .. " to " .. metadata.path)
+                utils.deactivate_venv()
+                -- utils.activate_venv()
             end
         end)
 

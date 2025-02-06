@@ -13,10 +13,12 @@ export GH_CONFIG_DIR=~/gh
 
 alias ls="eza --color=always --long --git --icons=always --no-user"
 alias profile="aws s3 ls --profile"
+
 sso() {
     export AWS_PROFILE="$1"
     aws sso login
 }
+
 function rds_port_forwarding () {
 if [ $1 = 'prod' ]
 then
@@ -76,8 +78,9 @@ export CODEARTIFACT_TOKEN=$(aws codeartifact get-authorization-token \
             --query authorizationToken \
             --output text)
 
-pip config set global.index-url \
-  https://aws:${CODEARTIFACT_TOKEN}@vareto-544138963155.d.codeartifact.us-west-2.amazonaws.com/pypi/vareto-python/simple
+export UV_INDEX_URL=https://aws:${CODEARTIFACT_TOKEN}@vareto-544138963155.d.codeartifact.us-west-2.amazonaws.com/pypi/vareto-python/simple
+# pip3 config set global.index-url \
+#   https://aws:${CODEARTIFACT_TOKEN}@vareto-544138963155.d.codeartifact.us-west-2.amazonaws.com/pypi/vareto-python/simple
 }
 function docker_artifact () {
 export CODEARTIFACT_TOKEN=$(aws codeartifact get-authorization-token \
@@ -86,10 +89,11 @@ export CODEARTIFACT_TOKEN=$(aws codeartifact get-authorization-token \
             --query authorizationToken \
             --output text)
 
-pip config set global.extra-index-url \
+pip3 config set global.extra-index-url \
   https://aws:${CODEARTIFACT_TOKEN}@vareto-544138963155.d.codeartifact.us-west-2.amazonaws.com/pypi/vareto-python/simple
 cp ~/.config/pip/pip.conf pip.conf
 }
+
 function aws_docker_login () {
 aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 137149808471.dkr.ecr.us-west-2.amazonaws.com
 }
