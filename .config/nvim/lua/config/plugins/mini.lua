@@ -2,11 +2,16 @@ return {
 	"echasnovski/mini.nvim",
 	version = "*",
 	config = function()
+    -- disable netrw at the very start of your init.lua
+    vim.g.loaded_netrw = 1
+    vim.g.loaded_netrwPlugin = 1
+
 		local mini_files = require("mini.files")
 		mini_files.setup({
 			options = {
 				-- Whether to delete permanently or move into module-specific trash
 				permanent_delete = false,
+        use_as_default_explorer = false,
 			},
 		})
 

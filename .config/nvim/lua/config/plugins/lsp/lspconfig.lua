@@ -97,15 +97,22 @@ return {
 				"rust_analyzer",
 				"pyright",
 				"ruff",
-        "gopls",
+				"gopls",
 			},
 		})
 
-    local utils = require("config.core.utils")
+		local utils = require("config.core.utils")
 		mason_lspconfig.setup_handlers({
 			function(server)
 				lspconfig[server].setup({
 					capabilities = lsp_capabilities,
+				})
+			end,
+			["gopls"] = function()
+				lspconfig["gopls"].setup({
+					cmd = { "gopls" },
+					filetypes = { "go", "gomod", "gowork", "gotmpl" },
+					root_dir = require("lspconfig.util").root_pattern("go.work", "go.mod", ".git"),
 				})
 			end,
 			["ts_ls"] = function()
