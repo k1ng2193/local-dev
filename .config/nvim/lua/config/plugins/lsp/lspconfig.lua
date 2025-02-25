@@ -110,9 +110,16 @@ return {
 			end,
 			["gopls"] = function()
 				lspconfig["gopls"].setup({
-					cmd = { "gopls" },
-					filetypes = { "go", "gomod", "gowork", "gotmpl" },
-					root_dir = require("lspconfig.util").root_pattern("go.work", "go.mod", ".git"),
+					capabilities = lsp_capabilities,
+					root_dir = lspconfig.util.root_pattern("go.mod"),
+					settings = {
+						gopls = {
+							buildFlags = { "-tags=dev" },
+							staticcheck = true,
+							usePlaceholders = true, -- enables placeholder parameters
+							completeUnimported = true, -- autocomplete unimported packages
+						},
+					},
 				})
 			end,
 			["ts_ls"] = function()
