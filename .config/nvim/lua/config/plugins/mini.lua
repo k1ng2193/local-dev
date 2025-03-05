@@ -17,7 +17,11 @@ return {
 
 		vim.keymap.set("n", "<leader>t", function()
 			mini_files.open()
-		end, { noremap = true, silent = true, desc = "Open File System" })
+		end, { noremap = true, silent = true, desc = "Open Directory" })
+
+		vim.keymap.set("n", "<leader>tf", function()
+			mini_files.open(vim.api.nvim_buf_get_name(0))
+		end, { noremap = true, silent = true, desc = "Open Directory of current file" })
 
 		local function get_relative_path()
 			local entry = mini_files.get_fs_entry()
