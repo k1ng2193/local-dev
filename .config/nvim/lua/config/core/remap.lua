@@ -106,10 +106,14 @@ opts.desc = "Docker Volume Prune"
 vim.keymap.set("n", "<leader>dpv", function() require("config.core.docker").prune_volume() end, opts)
 opts.desc = "Docker System Prune"
 vim.keymap.set("n", "<leader>dps", function() require("config.core.docker").prune_system() end, opts)
+opts.desc = "Docker Container Prune"
+vim.keymap.set("n", "<leader>dpc", function() require("config.core.docker").prune_container() end, opts)
 opts.desc = "Docker Compose Build"
 vim.keymap.set("n", "<leader>dcb", function() require("config.core.docker").build_containers() end, opts)
 opts.desc = "Docker Compose Up"
-vim.keymap.set("n", "<leader>dcu", function() require("config.core.docker").start_containers() end, opts)
+vim.keymap.set("n", "<leader>dcu", function() require("config.core.docker").start_containers(false) end, opts)
+opts.desc = "Docker Compose Up and Attach"
+vim.keymap.set("n", "<leader>dca", function() require("config.core.docker").start_containers(true) end, opts)
 opts.desc = "Docker Compose Down"
 vim.keymap.set("n", "<leader>dcd", function() require("config.core.docker").stop_containers() end, opts)
 opts.desc = "Docker Compose Kill Single Container"

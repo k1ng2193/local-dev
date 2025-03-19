@@ -382,11 +382,11 @@ end
 ---@param local_port string | nil
 local function get_port_and_attach(local_port)
 	local input_port
-  if local_port == nil then
-    input_port = default_port.port
-  else
-    input_port = local_port
-  end
+	if local_port == nil then
+		input_port = default_port.port
+	else
+		input_port = local_port
+	end
 
 	local port_input_config = {
 		position = "50%",
@@ -438,7 +438,7 @@ local function get_port_and_attach(local_port)
 	local attach_menu_size = {
 		position = "50%",
 		size = {
-			width = "10%",
+			width = "15%",
 			height = 2,
 		},
 		border = {
@@ -539,11 +539,12 @@ end
 ---@param up boolean
 ---@param delay integer
 ---@param cb function
-local function check_containers(message, up, delay, cb)
+---@param on_complete function | nil
+local function check_containers(message, up, delay, cb, on_complete)
 	local running = vim.fn.system("docker compose ps --services --filter 'status=running'")
 	local exited = vim.fn.system("docker compose ps --services --filter 'status=exited'")
 
-	local all_running = false
+	local check_complete = false
 	if running:gsub("^%s*(.-)%s*$", "%1") == "" or running == "" or running == "nil" then
 		if up then
 			vim.notify("No containers are running", 4)
@@ -563,7 +564,7 @@ local function check_containers(message, up, delay, cb)
 			end
 		end
 
-		all_running = true
+		check_complete = true
 	end
 
 	if up then
@@ -579,93 +580,24 @@ local function check_containers(message, up, delay, cb)
 		for _, line in ipairs(lines) do
 			if line == container then
 				vim.notify("All containers are up and running.")
-				all_running = true
+				check_complete = true
 
 				if StartUpTimer and not StartUpTimer:is_closing() then
 					StartUpTimer:close()
 				end
-
-        get_port_and_attach()
-				-- local input_port = default_port.port
-				-- local port_input_config = {
-				-- 	position = "50%",
-				-- 	size = {
-				-- 		width = 20,
-				-- 	},
-				-- 	border = {
-				-- 		style = "single",
-				-- 		text = {
-				-- 			top = "[Port]",
-				-- 			top_align = "center",
-				-- 		},
-				-- 	},
-				-- 	win_options = {
-				-- 		winhighlight = "Normal:Normal,FloatBorder:Normal",
-				-- 	},
-				-- }
-				-- local port_input_prompt = {
-				-- 	prompt = "> ",
-				-- 	default_value = input_port,
-				-- 	on_close = function()
-				-- 		vim.notify("Please input a port")
-				-- 	end,
-				-- 	on_submit = function(value)
-				-- 		port = tonumber(value)
-				-- 		vim.notify("Attempting to attach to container at port: " .. port)
-				-- 		if type(port) == "integer" then
-				-- 			disconnect_old_session(port)
-				-- 		end
-				--
-				-- 		vim.defer_fn(function()
-				-- 			M.attach_session({ host = "127.0.0.1" })
-				-- 		end, 5000)
-				-- 	end,
-				-- }
-				--
-				-- local attach_menu_config = {
-				-- 	lines = { Menu.item("Yes"), Menu.item("No") },
-				-- 	on_close = function()
-				-- 		vim.notify("No Option Selected")
-				-- 	end,
-				-- 	on_submit = function(item)
-				-- 		if item.text == "Yes" then
-				-- 			utils.mount_input(port_input_config, port_input_prompt)
-				-- 		end
-				-- 	end,
-				-- }
-				--
-				-- local attach_menu_size = {
-				-- 	position = "50%",
-				-- 	size = {
-				-- 		width = "10%",
-				-- 		height = 2,
-				-- 	},
-				-- 	border = {
-				-- 		style = "rounded",
-				-- 		text = {
-				-- 			top = "[Attach Debugger]",
-				-- 			top_align = "center",
-				-- 		},
-				-- 	},
-				-- 	win_options = {
-				-- 		winhighlight = "Normal:Normal,FloatBorder:Normal",
-				-- 	},
-				-- }
-				--
-				-- attach_menu_config = vim.tbl_extend("force", menu_config, attach_menu_config)
-				-- local attach_menu = Menu(attach_menu_size, attach_menu_config)
-				-- attach_menu:mount()
 			end
 		end
 	end
 
-	if not all_running then
+	if not check_complete then
 		vim.notify(message)
 
 		-- Reschedule the function to run again after a delay
 		vim.defer_fn(function()
 			cb(message, up, delay, check_containers)
 		end, delay)
+  elseif on_complete ~= nil then
+    on_complete()
 	end
 end
 
@@ -726,7 +658,7 @@ function M.run_pytest(opts)
 			utils.stream_to_buffer(bufnr, output)
 		end)
 
-    get_port_and_attach("6000")
+		get_port_and_attach("6000")
 
 		-- local attach_menu_config = {
 		-- 	lines = { Menu.item("Yes"), Menu.item("No") },
@@ -885,15 +817,54 @@ function M.prune_system()
 	vim.notify(system)
 end
 
+function M.prune_container()
+	local system = vim.fn.system("docker container prune -f")
+
+	vim.notify(system)
+end
+
 function M.build_containers()
 	get_docker_services({ action = "build" }, function()
-		load_dap().defaults.python.exception_breakpoints = { "default" }
-		local docker_command = string.format("docker compose build --no-cache " .. container)
-		execute_docker_command(docker_command)
+		local cache_menu_config = {
+			lines = { Menu.item("Yes"), Menu.item("No") },
+			on_close = function()
+				vim.notify("No Option Selected")
+			end,
+			on_submit = function(item)
+        local docker_command = string.format("docker compose build " .. container)
+				if item.text == "No" then
+				  docker_command = string.format(docker_command .. " --no-cache")
+				end
+        execute_docker_command(docker_command)
+			end,
+		}
+
+		local cache_menu_size = {
+			position = "50%",
+			size = {
+				width = "15%",
+				height = 2,
+			},
+			border = {
+				style = "rounded",
+				text = {
+					top = "[Build With Cache]",
+					top_align = "center",
+				},
+			},
+			win_options = {
+				winhighlight = "Normal:Normal,FloatBorder:Normal",
+			},
+		}
+
+		cache_menu_config = vim.tbl_extend("force", menu_config, cache_menu_config)
+		local attach_menu = Menu(cache_menu_size, cache_menu_config)
+		attach_menu:mount()
 	end)
 end
 
-function M.start_containers()
+---@param attach boolean
+function M.start_containers(attach)
 	if ShutDownTimer and not ShutDownTimer:is_closing() then
 		ShutDownTimer:close()
 	end
@@ -914,10 +885,15 @@ function M.start_containers()
 
 			vim.notify("Checking container statuses...")
 
+      local on_complete
+      if attach then
+        on_complete = get_port_and_attach
+      end
+
 			local message = "The " .. container .. " container is still booting up"
 			-- Schedule the asynchronous function to be executed asynchronously in the next event loop iteration
 			vim.defer_fn(function()
-				check_containers(message, true, 15000, check_containers)
+				check_containers(message, true, 15000, check_containers, on_complete)
 			end, 10000)
 		end)
 		-- assert(ok, result)

@@ -170,7 +170,8 @@ function M.stream_to_buffer(bufnr, data)
 	-- Process each line to ensure no newlines are present
 	local processed_data = {}
 	for _, line in ipairs(data) do
-		for _, split_line in ipairs(split_multiline_string(line)) do
+    local clean_line = line:gsub("\027%[[%d;]*[ABCDEFGHJKSfminu]", "")
+		for _, split_line in ipairs(split_multiline_string(clean_line)) do
 			table.insert(processed_data, split_line)
 		end
 	end
