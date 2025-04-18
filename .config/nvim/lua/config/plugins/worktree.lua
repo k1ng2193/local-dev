@@ -14,6 +14,10 @@ return {
         })
 
         work_tree.on_tree_change(function(op, metadata)
+            if op == work_tree.Operations.Create then
+                print("Created " .. metadata.branch .. " branch tracking " .. metadata.upstream)
+            end
+
             if op == work_tree.Operations.Switch then
                 print("Switched from " .. metadata.prev_path .. " to " .. metadata.path)
                 utils.deactivate_venv()

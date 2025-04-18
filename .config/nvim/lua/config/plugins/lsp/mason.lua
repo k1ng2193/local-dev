@@ -32,7 +32,8 @@ return {
 				"yamllint",
         "shfmt",
         "shellcheck",
-        "goimports",
+        "gci",
+        "golines",
 			},
 		})
 	end,

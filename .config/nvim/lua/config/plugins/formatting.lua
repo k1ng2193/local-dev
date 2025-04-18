@@ -18,7 +18,7 @@ return {
 				lua = { "stylua" },
 				python = { "isort", "black" },
 				sh = { "shfmt" },
-        go = { "goimports" },
+        go = { "gci", "golines" },
 			},
 			-- format_on_save = {
 			--     lsp_fallback = true,
@@ -69,6 +69,10 @@ return {
 		conform.formatters.shfmt = {
 			prepend_args = { "-i", "2" },
       stdin = true,
+		}
+
+		conform.formatters.golines = {
+			prepend_args = { "--max-len=120" },
 		}
 
 		vim.keymap.set({ "n", "v" }, "<leader>fm", function()
