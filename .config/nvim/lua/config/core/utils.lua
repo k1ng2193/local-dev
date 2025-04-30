@@ -183,8 +183,36 @@ function M.stream_to_buffer(bufnr, data)
 	vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, updated_lines)
 end
 
+-- Function fine a file
+---@param file_name string
+---@param max_depth number
+---@param current_depth number
+---@param start_path string
+local function find_path_for_file(file_name, max_depth, current_depth, start_path)
+  max_depth = max_depth or 10
+  current_depth = current_depth or 0
+  start_path = start_path or vim.fn.getcwd()
+
+  if current_depth > max_depth then
+    return nil
+  end
+
+  local paths = vim.fn.globpath(start_path, "*", 0, 1)
+  for _, path in ipairs(paths) do
+    if vim.fn.isdirectory(path) == 1 then
+      local stat = vim.uv.fs_stat(path .. "/" .. file_name)
+      if stat and stat.type == "file" then
+        return path
+      end
+      return find_path_for_file(file_name, max_depth, current_depth + 1, path)
+    end
+  end
+end
+
 function M.activate_venv()
-	local venv_path = vim.fn.getcwd() .. "/.venv"
+  local cwd = vim.fn.getcwd()
+  local file_path = find_path_for_file("pyproject.toml", 10, 0, cwd)
+	local venv_path = file_path .. "/.venv"
 
 	if vim.fn.isdirectory(venv_path) == 1 then
 		-- Store old PATH to allow deactivation

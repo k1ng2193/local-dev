@@ -149,7 +149,7 @@ end
 ---@param args table
 ---@param callback function
 local function execute_remote_docker_command(args, callback)
-	local uv = vim.loop
+	local uv = vim.uv
 	local stdout = uv.new_pipe(false)
 	local stderr = uv.new_pipe(false)
 
@@ -292,7 +292,7 @@ end
 local function get_docker_services(opts, cb)
 	local_cwd = vim.fn.getcwd()
 	local docker_compose_filepath = local_cwd .. "/docker-compose.yml"
-	local stat = vim.loop.fs_stat(docker_compose_filepath)
+	local stat = vim.uv.fs_stat(docker_compose_filepath)
 	if not stat or stat.type ~= "file" then
 		error("docker-compose.yml not found at " .. docker_compose_filepath)
 	end
@@ -766,7 +766,7 @@ end
 function M.get_docker_dependencies(opts, cb)
 	local_cwd = vim.fn.getcwd()
 	local pip_filepath = local_cwd .. "/pip.conf"
-	local stat = vim.loop.fs_stat(pip_filepath)
+	local stat = vim.uv.fs_stat(pip_filepath)
 
 	local callback = function()
 		local artifact_ok, artifact_result = pcall(dev.artifact)

@@ -168,7 +168,7 @@ return {
 			end,
 			["pyright"] = function()
 				lspconfig["pyright"].setup({
-					on_new_config = function(new_config, workspace_dir)
+					on_new_config = function()
 						-- Activate virtualenv before LSP starts
 						utils.activate_venv()
 					end,
