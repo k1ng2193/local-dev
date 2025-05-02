@@ -125,6 +125,21 @@ end
 
 local function get_test_path(classname, methodname)
 	local path = vim.fn.expand("%:p:.")
+	local project_root = utils.find_path_for_file("pyproject.toml", 1, 0, ".")
+	if project_root then
+    if not project_root:match("/$") then
+      project_root = project_root .. "/"
+    end
+    if project_root:sub(1, 2) == "./" then
+      project_root = project_root:sub(3)
+    end
+	end
+
+	-- Check if the path starts with the project root
+	if path:sub(1, #project_root) == project_root then
+		path = path:sub(#project_root + 1)
+	end
+
 	local test_path = table.concat(prune_nil({ path, classname, methodname }), "::")
 
 	return test_path
@@ -596,8 +611,8 @@ local function check_containers(message, up, delay, cb, on_complete)
 		vim.defer_fn(function()
 			cb(message, up, delay, check_containers)
 		end, delay)
-  elseif on_complete ~= nil then
-    on_complete()
+	elseif on_complete ~= nil then
+		on_complete()
 	end
 end
 
@@ -799,6 +814,12 @@ function M.list_image()
 	vim.notify(images)
 end
 
+function M.prune_build_cache()
+	local builder = vim.fn.system("docker builder prune -f")
+
+	vim.notify(builder)
+end
+
 function M.prune_image()
 	local image = vim.fn.system("docker image prune -f")
 
@@ -831,11 +852,11 @@ function M.build_containers()
 				vim.notify("No Option Selected")
 			end,
 			on_submit = function(item)
-        local docker_command = string.format("docker compose build " .. container)
+				local docker_command = string.format("docker compose build " .. container)
 				if item.text == "No" then
-				  docker_command = string.format(docker_command .. " --no-cache")
+					docker_command = string.format(docker_command .. " --no-cache")
 				end
-        execute_docker_command(docker_command)
+				execute_docker_command(docker_command)
 			end,
 		}
 
@@ -885,10 +906,10 @@ function M.start_containers(attach)
 
 			vim.notify("Checking container statuses...")
 
-      local on_complete
-      if attach then
-        on_complete = get_port_and_attach
-      end
+			local on_complete
+			if attach then
+				on_complete = get_port_and_attach
+			end
 
 			local message = "The " .. container .. " container is still booting up"
 			-- Schedule the asynchronous function to be executed asynchronously in the next event loop iteration

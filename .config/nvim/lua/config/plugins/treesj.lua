@@ -1,7 +1,6 @@
 return {
 	"Wansmer/treesj",
 	keys = {
-		{ "<leader>m", ":TSJToggle<CR>", noremap = true, silent = true, desc = "Toggle Split/Join" },
 		{ "<leader>J", ":TSJJoin<CR>", noremap = true, silent = true, desc = "Join Lines" },
 		{ "<leader>s", ":TSJSplit<CR>", noremap = true, silent = true, desc = "Split Lines" },
 	},

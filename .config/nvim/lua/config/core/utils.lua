@@ -185,10 +185,10 @@ end
 
 -- Function fine a file
 ---@param file_name string
----@param max_depth number
----@param current_depth number
----@param start_path string
-local function find_path_for_file(file_name, max_depth, current_depth, start_path)
+---@param max_depth number | nil
+---@param current_depth number | nil
+---@param start_path string | nil
+function M.find_path_for_file(file_name, max_depth, current_depth, start_path)
   max_depth = max_depth or 10
   current_depth = current_depth or 0
   start_path = start_path or vim.fn.getcwd()
@@ -200,18 +200,17 @@ local function find_path_for_file(file_name, max_depth, current_depth, start_pat
   local paths = vim.fn.globpath(start_path, "*", 0, 1)
   for _, path in ipairs(paths) do
     if vim.fn.isdirectory(path) == 1 then
-      local stat = vim.uv.fs_stat(path .. "/" .. file_name)
-      if stat and stat.type == "file" then
+      if vim.fn.filereadable(path .. "/" .. file_name) == 1 then
         return path
       end
-      return find_path_for_file(file_name, max_depth, current_depth + 1, path)
+      return M.find_path_for_file(file_name, max_depth, current_depth + 1, path)
     end
   end
 end
 
 function M.activate_venv()
   local cwd = vim.fn.getcwd()
-  local file_path = find_path_for_file("pyproject.toml", 10, 0, cwd)
+  local file_path = M.find_path_for_file("pyproject.toml", 2, 0, cwd)
 	local venv_path = file_path .. "/.venv"
 
 	if vim.fn.isdirectory(venv_path) == 1 then
