@@ -114,7 +114,7 @@ return {
 					root_dir = lspconfig.util.root_pattern("go.mod"),
 					settings = {
 						gopls = {
-							buildFlags = { "-tags=dev" },
+							buildFlags = { "-tags=dev,test,init,integration" },
 							staticcheck = true,
 							usePlaceholders = true, -- enables placeholder parameters
 							completeUnimported = true, -- autocomplete unimported packages
