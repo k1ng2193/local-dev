@@ -130,8 +130,6 @@ vim.keymap.set("n", "<leader>i", function() vim.lsp.inlay_hint.enable(not vim.ls
 
 opts.desc = "Create GH Pull Request"
 vim.keymap.set("n", "<leader>ghpc", function() require("config.core.gh").create_pr() end, opts)
-opts.desc = "Create GH Pull Request"
-vim.keymap.set("n", "<leader>te", function() require("config.core.gh").test() end, opts)
 
 opts.silent = false
 opts.desc = "Search and Replace Yanked"
