@@ -13,6 +13,15 @@ return {
 		"rcarriga/nvim-notify",
 	},
 	config = function()
+    local original_notify = vim.notify
+    vim.notify = function(msg, level, opts)
+      if type(msg) == "string" then
+        local clean_msg = msg:gsub("\027%[[%d;]*[ABCDEFGHJKSfminu]", "")
+        return original_notify(clean_msg, level, opts)
+      end
+      return original_notify(msg, level, opts)
+    end
+
 		require("notify").setup({
 			background_colour = "#000000",
 		})
