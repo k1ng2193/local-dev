@@ -18,6 +18,19 @@ return {
 		})
 
 		require("noice").setup({
+			routes = {
+				{
+					filter = {
+						event = "lsp",
+						kind = "progress",
+						cond = function(message)
+							local client = vim.tbl_get(message.opts, "progress", "client")
+							return client == "typescript-language-server" or client == "tsserver"
+						end,
+					},
+					opts = { skip = true },
+				},
+			},
 			views = {
 				cmdline_popup = {
 					relative = "editor",
