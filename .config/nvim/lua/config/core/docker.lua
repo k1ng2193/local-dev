@@ -985,7 +985,7 @@ function M.stop_containers()
 		StartUpTimer:close()
 	end
 
-	local docker_command = string.format("docker compose down -v --remove-orphans")
+	local docker_command = string.format("docker compose --profile '*' down -v --remove-orphans")
 	vim.notify("Shutting down all docker containers")
 	local docker_coroutine = DockerCoroutine(docker_command)
 	coroutine.resume(docker_coroutine)
