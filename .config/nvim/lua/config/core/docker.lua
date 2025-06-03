@@ -814,6 +814,18 @@ function M.list_image()
 	vim.notify(images)
 end
 
+function M.list_network()
+	local net = vim.fn.system("docker network ls")
+
+	vim.notify(net)
+end
+
+function M.list_volume()
+	local vol = vim.fn.system("docker volume ls")
+
+	vim.notify(vol)
+end
+
 function M.prune_build_cache()
 	local builder = vim.fn.system("docker builder prune -f")
 
@@ -824,6 +836,12 @@ function M.prune_image()
 	local image = vim.fn.system("docker image prune -f")
 
 	vim.notify(image)
+end
+
+function M.prune_network()
+	local net = vim.fn.system("docker network prune -f")
+
+	vim.notify(net)
 end
 
 function M.prune_volume()

@@ -100,10 +100,16 @@ opts.desc = "Docker Show Containers"
 vim.keymap.set("n", "<leader>ds", function() require("config.core.docker").show_containers() end, opts)
 opts.desc = "Docker Image List"
 vim.keymap.set("n", "<leader>dil", function() require("config.core.docker").list_image() end, opts)
+opts.desc = "Docker Network List"
+vim.keymap.set("n", "<leader>dil", function() require("config.core.docker").list_network() end, opts)
+opts.desc = "Docker Volume List"
+vim.keymap.set("n", "<leader>dil", function() require("config.core.docker").list_volume() end, opts)
 opts.desc = "Docker Build Cache Prune"
 vim.keymap.set("n", "<leader>dpb", function() require("config.core.docker").prune_build_cache() end, opts)
 opts.desc = "Docker Image Prune"
 vim.keymap.set("n", "<leader>dpi", function() require("config.core.docker").prune_image() end, opts)
+opts.desc = "Docker Network Prune"
+vim.keymap.set("n", "<leader>dpi", function() require("config.core.docker").prune_network() end, opts)
 opts.desc = "Docker Volume Prune"
 vim.keymap.set("n", "<leader>dpv", function() require("config.core.docker").prune_volume() end, opts)
 opts.desc = "Docker System Prune"
