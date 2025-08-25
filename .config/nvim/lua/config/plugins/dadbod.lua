@@ -1,7 +1,7 @@
 return {
     "kristijanhusak/vim-dadbod-ui",
     keys = {
-        { "<leader>do", ":DBUIToggle<CR>", noremap = true, silent = true, desc = "Toggle DB UI" },
+        { "<leader>db", ":DBUIToggle<CR>", noremap = true, silent = true, desc = "Toggle DB UI" },
     },
     dependencies = {
         { "tpope/vim-dadbod",                     lazy = true },

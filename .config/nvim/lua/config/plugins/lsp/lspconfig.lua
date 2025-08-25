@@ -1,14 +1,42 @@
 return {
-	"neovim/nvim-lspconfig",
+	"mason-org/mason-lspconfig.nvim",
+	version = "^1.0.0",
 	event = { "BufReadPre", "BufNewFile" },
 	dependencies = {
-		"williamboman/mason-lspconfig.nvim",
+		{ "mason-org/mason.nvim", version = "^1.0.0" },
+		"neovim/nvim-lspconfig",
 		"hrsh7th/cmp-nvim-lsp",
 		{ "antosha417/nvim-lsp-file-operations", config = true },
 		{ "folke/neodev.nvim", opts = {} },
-		-- "ray-x/lsp_signature.nvim",
+		"WhoIsSethDaniel/mason-tool-installer.nvim",
 	},
 	config = function()
+		require("mason").setup({
+			ui = {
+				icons = {
+					package_installed = "✓",
+					package_pending = "➜",
+					package_uninstalled = "✗",
+				},
+			},
+		})
+		require("mason-tool-installer").setup({
+			ensure_installed = {
+				"prettier", -- prettier formatter
+				"stylua", -- lua formatter
+				"isort", -- python formatter
+				"black", -- python formatter
+				-- "flake8",
+				"eslint_d",
+				"jsonlint",
+				"yamllint",
+				"shfmt",
+				"shellcheck",
+				"gci",
+				"golines",
+			},
+		})
+
 		local lspconfig = require("lspconfig")
 		local mason_lspconfig = require("mason-lspconfig")
 		local cmp_nvim_lsp = require("cmp_nvim_lsp")
@@ -17,35 +45,25 @@ return {
 		vim.api.nvim_create_autocmd("LspAttach", {
 			group = vim.api.nvim_create_augroup("UserLspConfig", {}),
 			callback = function(ev)
-				-- Set up lsp_signature
-				-- require("lsp_signature").on_attach({
-				--     bind = true, -- Bind lsp_signature to keybindings
-				--     handler_opts = {
-				--         border = "single"
-				--     },
-				--     hint_enable = true,
-				--     hint_prefix = "👀 ",
-				-- })
-
 				local opts = { buffer = ev.buf, silent = true }
 
 				opts.desc = "Hover Window"
 				keymap.set("n", "K", vim.lsp.buf.hover, opts)
 
-				opts.desc = "Go To Definition"
-				keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts)
+				-- opts.desc = "Go To Definition"
+				-- keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts)
 
 				opts.desc = "Go To Declaration"
 				keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
 
-				opts.desc = "Go To Implementation"
-				keymap.set("n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts)
-
-				opts.desc = "Go To Type Definition"
-				keymap.set("n", "gt", "<cmd>Telescope lsp_type_definitions<CR>", opts)
-
-				opts.desc = "Go To References"
-				keymap.set("n", "gr", "<cmd>Telescope lsp_references<CR>", opts)
+				-- opts.desc = "Go To Implementation"
+				-- keymap.set("n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts)
+				--
+				-- opts.desc = "Go To Type Definition"
+				-- keymap.set("n", "gt", "<cmd>Telescope lsp_type_definitions<CR>", opts)
+				--
+				-- opts.desc = "Go To References"
+				-- keymap.set("n", "gr", "<cmd>Telescope lsp_references<CR>", opts)
 
 				opts.desc = "Signature Help"
 				keymap.set("n", "gs", vim.lsp.buf.signature_help, opts)
@@ -53,23 +71,24 @@ return {
 				opts.desc = "Rename"
 				keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
 
-				-- opts.desc = "Format"
-				-- keymap.set({ "n", "x" }, "<leader>fm", function() vim.lsp.buf.format({ async = true }) end, opts)
-				--
 				opts.desc = "Code Action"
 				keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
 
-				opts.desc = "Show Buffer Diagnostics"
-				keymap.set("n", "bd", "<cmd>Telescope diagnostics bufnr=0<CR>", opts)
+				-- opts.desc = "Show Buffer Diagnostics"
+				-- keymap.set("n", "bd", "<cmd>Telescope diagnostics bufnr=0<CR>", opts)
 
 				opts.desc = "Show Line Diagnostics"
 				keymap.set("n", "gl", vim.diagnostic.open_float, opts)
 
 				opts.desc = "Go To Previous Diagnostic"
-				keymap.set("n", "[d", vim.diagnostic.goto_prev, opts)
+				keymap.set("n", "[d", function()
+					vim.diagnostic.jump({ count = -1, float = true, wrap = true })
+				end, opts)
 
 				opts.desc = "Go To Next Diagnostic"
-				keymap.set("n", "]d", vim.diagnostic.goto_next, opts)
+				keymap.set("n", "]d", function()
+					vim.diagnostic.jump({ count = 1, float = true, wrap = true })
+				end, opts)
 
 				opts.desc = "Restart LSP"
 				keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts)
@@ -99,6 +118,7 @@ return {
 				"ruff",
 				"gopls",
 			},
+			automatic_enable = false,
 		})
 
 		local utils = require("config.core.utils")
@@ -127,6 +147,13 @@ return {
 					capabilities = lsp_capabilities,
 					settings = {
 						typescript = {
+							preferences = {
+								includePackageJsonAutoImports = "auto",
+								includeCompletionsForModuleExports = true,
+							},
+							suggest = {
+								includeCompletionsForModuleExports = true,
+							},
 							inlayHints = {
 								includeInlayEnumMemberValueHints = true,
 								includeInlayFunctionLikeReturnTypeHints = true,
@@ -255,13 +282,13 @@ return {
 			end,
 			["ruff"] = function()
 				lspconfig["ruff"].setup({
-					-- cmd = { vim.fn.stdpath("data") .. "/mason/bin/ruff" },
+					capabilities = lsp_capabilities,
 					init_options = {
 						settings = {
 							-- Complexity (equivalent to --max-complexity)
-							lint = {
-								enable = false,
-							},
+							-- lint = {
+							-- 	enable = false,
+							-- },
 
 							-- Line length and complexity
 							line_length = 100,
@@ -287,7 +314,6 @@ return {
 							},
 						},
 					},
-					capabilities = lsp_capabilities,
 					on_attach = function(client, _)
 						if client.name == "ruff" then
 							client.server_capabilities.hoverProvider = false

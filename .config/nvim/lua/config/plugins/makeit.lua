@@ -1,11 +1,74 @@
-return { -- This plugin
-  "Zeioth/makeit.nvim",
-	keys = {
-		{ "<leader>mo", ":MakeitOpen<CR>", noremap = true, silent = true, desc = "Open Makefile Window" },
-		{ "<leader>mt", ":MakeitToggleResults<CR>", noremap = true, silent = true, desc = "Toggle Makefile Process Results" },
-		{ "<leader>mr", ":MakeitRedo<CR>", noremap = true, silent = true, desc = "Re-run Makefile Process" },
-	},
-  cmd = {"MakeitOpen", "MakeitToggleResults", "MakeitRedo"},
-  dependencies = { "stevearc/overseer.nvim" },
-  opts = {},
+return {
+	-- "Zeioth/makeit.nvim",
+	-- keys = {
+	-- 	-- { "<leader>mo", ":MakeitOpen<CR>", noremap = true, silent = true, desc = "Open Makefile Window" },
+	-- 	{
+	-- 		"<leader>mo",
+	-- 		function()
+	-- 			require("snacks").picker.makeit()
+	-- 		end,
+	-- 		noremap = true,
+	-- 		silent = true,
+	-- 		desc = "Open Makefile Window",
+	-- 	},
+	-- 	{
+	-- 		"<leader>mt",
+	-- 		":MakeitToggleResults<CR>",
+	-- 		noremap = true,
+	-- 		silent = true,
+	-- 		desc = "Toggle Makefile Process Results",
+	-- 	},
+	-- 	{ "<leader>mr", ":MakeitRedo<CR>", noremap = true, silent = true, desc = "Re-run Makefile Process" },
+	-- 	{ "<leader>ms", ":MakeitStop<CR>", noremap = true, silent = true, desc = "Stop Makefile Process" },
+	-- },
+	-- -- cmd = { "MakeitOpen", "MakeitToggleResults", "MakeitRedo", "MakeitStop" },
+	-- cmd = { "MakeitToggleResults", "MakeitRedo", "MakeitStop"},
+	-- dependencies = { "stevearc/overseer.nvim" },
+	-- specs = {
+	-- 	"folke/snacks.nvim",
+	-- 	opts = function(_, opts)
+	-- 		return vim.tbl_deep_extend("force", opts or {}, {
+	-- 			picker = {
+	-- 				sources = {
+	-- 					makeit = {
+	-- 						title = "Makeit",
+	-- 						finder = function()
+	-- 							local uv = vim.uv or vim.loop
+	-- 							local cwd = vim.fs.normalize(opts and opts.cwd or uv.cwd() or ".") or nil
+	-- 							local utils = require("makeit.utils")
+	-- 							local options = utils.get_makefile_options(utils.os_path(cwd .. "/Makefile"))
+	--
+	-- 							return options
+	-- 						end,
+	-- 						format = "text",
+	-- 						layout = { preview = false },
+	-- 						confirm = function(picker)
+	-- 							local item = picker:current()
+	-- 							if not item and not item.value then
+	-- 								return
+	-- 							end
+	-- 							require("makeit.backend").run_makefile(item.value)
+	-- 						end,
+	-- 					},
+	-- 				},
+	-- 			},
+	-- 		})
+	-- 	end,
+	-- },
+	-- opts = {},
+	-- -- config = function()
+	-- -- 	vim.keymap.set("n", "<leader>mo", function()
+	-- -- 		-- local utils = require("makeit.utils")
+	-- -- 		-- local options = utils.get_makefile_options(utils.os_path(vim.fn.getcwd() .. "/Makefile"))
+	-- -- 		--
+	-- -- 		-- vim.ui.select(options, { prompt = "Makeit" }, function(choice)
+	-- -- 		-- 	if not choice then
+	-- -- 		-- 		return
+	-- -- 		-- 	end
+	-- -- 		--
+	-- -- 		-- 	require("makeit.backend").run_makefile(choice)
+	-- -- 		-- end)
+	-- -- 		require("snacks").picker.create_git_worktree()
+	-- -- 	end, { noremap = true, silent = true, desc = "Open Makefile Window" })
+	-- -- end,
 }

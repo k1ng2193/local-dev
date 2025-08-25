@@ -1,23 +1,16 @@
 local M = {}
-
----@param input_config table
----@param input_prompt table
-function M.mount_input(input_config, input_prompt)
-	local Input = require("nui.input")
-
-	local input = Input(input_config, input_prompt)
-	input:mount()
-
-	input:map("n", "<ESC>", function()
-		input:unmap("n", "<ESC>")
-		input:unmap("n", "<leader><BS>")
-		input:unmount()
-	end, { noremap = true, silent = true })
-	input:map("n", "<leader><BS>", function()
-		input:unmap("n", "<ESC>")
-		input:unmap("n", "<leader><BS>")
-		input:unmount()
-	end, { noremap = true, silent = true })
+---
+--- Given a string, convert 'slash' to 'inverted slash' if on windows, and vice versa on UNIX.
+-- Then return the resulting string.
+---@param path string
+---@return string|nil, nil
+function M.os_path(path)
+	if path == nil then
+		return nil
+	end
+	-- Get the platform-specific path separator
+	local separator = package.config:sub(1, 1)
+	return string.gsub(path, "[/\\]", separator)
 end
 
 -- Function to read the content of a file
@@ -72,79 +65,6 @@ function M.open_url(url)
 	})
 end
 
----@param opts table | nil
----@param new_lines table | nil
-function M.update_popup_content(opts, new_lines)
-	local Popup = require("nui.popup")
-	local event = require("nui.utils.autocmd").event
-	local default_popup = Popup({
-		enter = true,
-		focusable = true,
-		border = {
-			style = "rounded",
-		},
-		position = {
-			row = "100%",
-			col = 0,
-		},
-		size = {
-			width = "50%",
-			height = "100%",
-		},
-		anchor = "NW",
-		relative = "editor",
-	})
-	local default_opts = { popup = default_popup, event = event.BufLeave }
-
-	local config = vim.tbl_extend("keep", opts or {}, default_opts)
-	if not config.popup.mounted then
-		local popup = config.popup
-
-		popup:mount()
-
-		popup:map("n", "<ESC>", function()
-			if config.event then
-				popup:off(config.event)
-			end
-			popup:unmap("n", "<ESC>")
-			popup:unmap("n", "<leader><BS>")
-			popup:unmount()
-			-- os.remove(file_path)
-		end, { noremap = true, silent = true })
-
-		popup:map("n", "<leader><BS>", function()
-			if config.event then
-				popup:off(config.event)
-			end
-			popup:unmap("n", "<ESC>")
-			popup:unmap("n", "<leader><BS>")
-			popup:unmount()
-			-- os.remove(file_path)
-		end, { noremap = true, silent = true })
-
-		if config.event then
-			popup:on({ config.event }, function()
-				popup:unmap("n", "<ESC>")
-				popup:unmap("n", "<leader><BS>")
-				popup:unmount()
-				-- os.remove(file_path)
-			end, { once = true })
-		end
-	end
-
-	if new_lines then
-		-- Get current lines in the popup buffer
-		local current_lines = vim.api.nvim_buf_get_lines(config.popup.bufnr, 0, -1, false)
-		-- Concatenate current lines with the new lines
-		local updated_lines = vim.list_extend(current_lines, new_lines)
-		-- local output_string = table.concat(output_table, "\n")
-		-- vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, vim.split(output_string, "\n"))
-		vim.api.nvim_buf_set_lines(config.popup.bufnr, 0, -1, false, updated_lines)
-	else
-		vim.api.nvim_buf_set_lines(config.popup.bufnr, 0, -1, false, { "Failed to read output" })
-	end
-end
-
 -- Function to open a vertical split window and return the buffer number
 ---@return number
 function M.open_vertical_split()
@@ -155,7 +75,7 @@ function M.open_vertical_split()
 end
 
 -- Function to split a multiline string into individual lines
-local function split_multiline_string(str)
+function M.split_multiline_string(str)
 	local lines = {}
 	for line in str:gmatch("[^\r\n]+") do
 		table.insert(lines, line)
@@ -170,8 +90,8 @@ function M.stream_to_buffer(bufnr, data)
 	-- Process each line to ensure no newlines are present
 	local processed_data = {}
 	for _, line in ipairs(data) do
-    local clean_line = line:gsub("\027%[[%d;]*[ABCDEFGHJKSfminu]", "")
-		for _, split_line in ipairs(split_multiline_string(clean_line)) do
+		local clean_line = line:gsub("\027%[[%d;]*[ABCDEFGHJKSfminu]", "")
+		for _, split_line in ipairs(M.split_multiline_string(clean_line)) do
 			table.insert(processed_data, split_line)
 		end
 	end
@@ -183,34 +103,34 @@ function M.stream_to_buffer(bufnr, data)
 	vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, updated_lines)
 end
 
--- Function fine a file
+-- Function find a file
 ---@param file_name string
 ---@param max_depth number | nil
 ---@param current_depth number | nil
 ---@param start_path string | nil
 function M.find_path_for_file(file_name, max_depth, current_depth, start_path)
-  max_depth = max_depth or 10
-  current_depth = current_depth or 0
-  start_path = start_path or vim.fn.getcwd()
+	max_depth = max_depth or 10
+	current_depth = current_depth or 0
+	start_path = start_path or vim.fn.getcwd()
 
-  if current_depth > max_depth then
-    return nil
-  end
+	if current_depth > max_depth then
+		return nil
+	end
 
-  local paths = vim.fn.globpath(start_path, "*", 0, 1)
-  for _, path in ipairs(paths) do
-    if vim.fn.isdirectory(path) == 1 then
-      if vim.fn.filereadable(path .. "/" .. file_name) == 1 then
-        return path
-      end
-      return M.find_path_for_file(file_name, max_depth, current_depth + 1, path)
-    end
-  end
+	local paths = vim.fn.globpath(start_path, "*", 0, true)
+	for _, path in ipairs(paths) do
+		if vim.fn.isdirectory(path) == 1 then
+			if vim.fn.filereadable(path .. "/" .. file_name) == 1 then
+				return path
+			end
+			return M.find_path_for_file(file_name, max_depth, current_depth + 1, path)
+		end
+	end
 end
 
 function M.activate_venv()
-  local cwd = vim.fn.getcwd()
-  local file_path = M.find_path_for_file("pyproject.toml", 2, 0, cwd)
+	local cwd = vim.fn.getcwd()
+	local file_path = M.find_path_for_file("pyproject.toml", 2, 0, cwd)
 	local venv_path = file_path .. "/.venv"
 
 	if vim.fn.isdirectory(venv_path) == 1 then

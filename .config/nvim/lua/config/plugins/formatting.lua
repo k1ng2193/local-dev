@@ -18,7 +18,7 @@ return {
 				lua = { "stylua" },
 				python = { "isort", "black" },
 				sh = { "shfmt" },
-        go = { "gci", "golines" },
+				go = { "gci", "golines" },
 			},
 			-- format_on_save = {
 			--     lsp_fallback = true,
@@ -68,11 +68,36 @@ return {
 
 		conform.formatters.shfmt = {
 			prepend_args = { "-i", "2" },
-      stdin = true,
+			stdin = true,
+		}
+
+		conform.formatters.gci = {
+			command = "gci",
+			args = {
+				"write",
+				"--skip-generated",
+				"-s",
+				"standard",
+				"-s",
+				"blank",
+				"-s",
+				"default",
+				"-s",
+				"alias",
+				"-s",
+				"localmodule",
+				"$FILENAME",
+			},
+			stdin = false,
+			cwd = function(self, ctx)
+				-- Find the go.mod file starting from current file's directory
+				local util = require("conform.util")
+				return util.root_file({ "go.mod" })(self, ctx)
+			end,
 		}
 
 		conform.formatters.golines = {
-			prepend_args = { "--max-len=120" },
+			prepend_args = { "--ignore-generated", "--max-len=120" },
 		}
 
 		vim.keymap.set({ "n", "v" }, "<leader>fm", function()

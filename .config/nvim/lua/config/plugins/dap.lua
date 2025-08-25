@@ -18,7 +18,7 @@ return {
         dappy.setup("uv")
         dappy.test_runner = "pytest"
 
-        vim.keymap.set("n", "<leader>db", function() dap.toggle_breakpoint() end, { noremap = true, silent = true, desc = "Toggle Breakpoint" })
+        vim.keymap.set("n", "<leader>bp", function() dap.toggle_breakpoint() end, { noremap = true, silent = true, desc = "Toggle Breakpoint" })
         vim.keymap.set("n", "<leader>dd", function() dap.clear_breakpoints() end, { noremap = true, silent = true, desc = "Clear Breakpoints" })
         vim.keymap.set("n", "<S-k>", function() dap.step_out() end, { noremap = true, silent = true, desc = "Step Out" })
         vim.keymap.set("n", "<S-l>", function() dap.step_into() end, { noremap = true, silent = true, desc = "Step Into" })

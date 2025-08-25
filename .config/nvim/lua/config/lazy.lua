@@ -12,14 +12,19 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
-  { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+	-- { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+	{
+		"L3MON4D3/LuaSnip",
+		-- follow latest release.
+		version = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
+		build = "make install_jsregexp",
+	},
 	{ import = "config.plugins" },
 	{ import = "config.plugins.lsp" },
-	"MunifTanjim/nui.nvim",
 }, {
-  git = {
-    timeout = 300,
-  },
+	git = {
+		timeout = 300,
+	},
 	install = {
 		colorscheme = { "catppuccin" },
 	},
