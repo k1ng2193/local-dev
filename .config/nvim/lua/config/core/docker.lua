@@ -374,68 +374,115 @@ end
 ---@param message string
 ---@param up boolean
 ---@param delay integer
----@param cb function
 ---@param on_complete function | nil
-local function check_containers(message, up, delay, cb, on_complete)
-	local running = vim.fn.system("docker compose ps --services --filter 'status=running'")
-	local exited = vim.fn.system("docker compose ps --services --filter 'status=exited'")
+local function check_containers(message, up, delay, on_complete)
+	local running_cmd = "docker compose ps --services --filter 'status=running' 2>/dev/null"
+	local exited_cmd = "docker compose ps --services --filter 'status=exited' 2>/dev/null"
+
+	local running = vim.fn.system(running_cmd)
+	local exited = vim.fn.system(exited_cmd)
+	running = running:gsub("^%s*(.-)%s*$", "%1") -- trim whitespace
+	exited = exited:gsub("^%s*(.-)%s*$", "%1")
 
 	local check_complete = false
-	if running:gsub("^%s*(.-)%s*$", "%1") == "" or running == "" or running == "nil" then
-		if up then
-			vim.notify("No containers are running", 4)
-			if StartUpTimer and not StartUpTimer:is_closing() then
-				StartUpTimer:close()
-			end
-		else
+
+	if not up then -- Checking for shutdown
+		if running == "" then
 			vim.notify("All containers have been shut down")
 			container = nil
-
-			-- vim.defer_fn(function()
-			-- remove_docker_network()
-			-- end, 30000)
+			check_complete = true
 
 			if ShutDownTimer and not ShutDownTimer:is_closing() then
 				ShutDownTimer:close()
+				ShutDownTimer = nil
+			end
+		end
+	else -- Checking for startup
+		-- Split the result into lines and check for your container
+		local services = {}
+		for line in running:gmatch("[^\r\n]+") do
+			if line:gsub("^%s*(.-)%s*$", "%1") ~= "" then -- ignore empty lines
+				table.insert(services, line)
 			end
 		end
 
-		check_complete = true
-	end
-
-	if up then
-		-- Split the result into lines
-		local lines = {}
-		for running_line in running:gmatch("[^\r\n]+") do
-			table.insert(lines, running_line)
-		end
-		for exited_line in exited:gmatch("[^\r\n]+") do
-			table.insert(lines, exited_line)
-		end
-
-		for _, line in ipairs(lines) do
-			if line == container then
+		for _, service in ipairs(services) do
+			if service == container then
 				vim.notify("All containers are up and running.")
 				check_complete = true
-
 				if StartUpTimer and not StartUpTimer:is_closing() then
 					StartUpTimer:close()
+					StartUpTimer = nil
 				end
+				break
 			end
 		end
 	end
 
 	if not check_complete then
 		vim.notify(message)
-
-		-- Reschedule the function to run again after a delay
 		vim.defer_fn(function()
-			cb(message, up, delay, check_containers)
+			check_containers(message, up, delay, on_complete)
 		end, delay)
-	elseif on_complete ~= nil then
+	elseif on_complete then
 		on_complete()
 	end
 end
+-- 	if running == "" or running == "nil" then
+-- 		if up then
+-- 			vim.notify("No containers are running", 4)
+-- 			if StartUpTimer and not StartUpTimer:is_closing() then
+-- 				StartUpTimer:close()
+-- 			end
+-- 		else
+-- 			vim.notify("All containers have been shut down")
+-- 			container = nil
+--
+-- 			-- vim.defer_fn(function()
+-- 			-- remove_docker_network()
+-- 			-- end, 30000)
+--
+-- 			if ShutDownTimer and not ShutDownTimer:is_closing() then
+-- 				ShutDownTimer:close()
+-- 			end
+-- 		end
+--
+-- 		check_complete = true
+-- 	end
+--
+-- 	if up then
+-- 		-- Split the result into lines
+-- 		local lines = {}
+-- 		for running_line in running:gmatch("[^\r\n]+") do
+-- 			table.insert(lines, running_line)
+-- 		end
+-- 		for exited_line in exited:gmatch("[^\r\n]+") do
+-- 			table.insert(lines, exited_line)
+-- 		end
+--
+-- 		for _, line in ipairs(lines) do
+-- 			if line == container then
+-- 				vim.notify("All containers are up and running.")
+-- 				check_complete = true
+--
+-- 				if StartUpTimer and not StartUpTimer:is_closing() then
+-- 					StartUpTimer:close()
+-- 				end
+-- 			end
+-- 		end
+-- 	end
+--
+-- 	if not check_complete then
+-- 		vim.notify(message)
+--
+-- 		-- Reschedule the function to run again after a delay
+-- 		vim.defer_fn(function()
+-- 			check_containers(message, up, delay, on_complete)
+-- 		end, delay)
+-- 	elseif on_complete ~= nil then
+-- 		on_complete()
+-- 	end
+-- end
 
 -- Function to check if an individual container is running
 ---@param local_container string
@@ -660,7 +707,7 @@ function M.start_containers(attach)
 			local message = "The " .. container .. " container is still booting up"
 			-- Schedule the asynchronous function to be executed asynchronously in the next event loop iteration
 			vim.defer_fn(function()
-				check_containers(message, true, 15000, check_containers, on_complete)
+				check_containers(message, true, 15000, on_complete)
 			end, 10000)
 		end)
 		-- assert(ok, result)
@@ -681,7 +728,7 @@ function M.start_containers(attach)
 		-- 	local message = "The " .. container .. " container is still booting up"
 		-- 	-- Schedule the asynchronous function to be executed asynchronously in the next event loop iteration
 		-- 	vim.defer_fn(function()
-		-- 		check_containers(message, true, 15000, check_containers)
+		-- 		check_containers(message, true, 15000)
 		-- 	end, 10000)
 		-- end)
 	end)
@@ -744,14 +791,14 @@ function M.stop_containers()
 	ShutDownTimer = vim.defer_fn(function()
 		-- Terminate the process if it takes longer than 5 minutes
 		vim.notify("Containers are taking too long to shutdown. Please check the container statuses manually.")
-	end, 60000) -- milliseconds
+	end, 10000) -- milliseconds
 
 	vim.notify("Checking container statuses...")
 
 	local message = "Containers are still shutting down"
 	-- Schedule the asynchronous function to be executed asynchronously in the next event loop iteration
 	vim.defer_fn(function()
-		check_containers(message, false, 10000, check_containers)
+		check_containers(message, false, 3000)
 	end, 1000)
 end
 

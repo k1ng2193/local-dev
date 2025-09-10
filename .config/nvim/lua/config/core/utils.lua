@@ -109,6 +109,10 @@ end
 ---@param current_depth number | nil
 ---@param start_path string | nil
 function M.find_path_for_file(file_name, max_depth, current_depth, start_path)
+  if vim.fn.filereadable(start_path .. "/" .. file_name) == 1 then
+    return start_path
+  end
+
 	max_depth = max_depth or 10
 	current_depth = current_depth or 0
 	start_path = start_path or vim.fn.getcwd()

@@ -20,7 +20,7 @@ local function get_makefile_options(path)
 		-- Iterate through each line in the Makefile
 		for line in file:lines() do
 			-- Check for lines starting with a target rule (e.g., "target: dependencies")
-			local target = line:match("^(.-):")
+			local target = line:match("^([%w%-_]+):$")
 			if target then
 				in_target = true
 				count = count + 1
