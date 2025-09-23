@@ -1,4 +1,4 @@
-local utils = require("config.core.utils")
+local utils = require("core.utils")
 local snacks = require("snacks")
 
 -- local actions = require("telescope.actions")

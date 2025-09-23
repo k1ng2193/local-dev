@@ -35,7 +35,7 @@ return {
 		picker = {
       enabled = true,
 			sources = {
-				makeit = require("config.core.makeit").make_picker(),
+				makeit = require("core.makeit").make_picker(),
 			},
 			ui_select = true,
 			matcher = {

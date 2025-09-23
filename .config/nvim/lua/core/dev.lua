@@ -1,6 +1,6 @@
 local M = {}
 
-local utils = require("config.core.utils")
+local utils = require("core.utils")
 
 ---@param cb function | nil
 function M.sso(cb)

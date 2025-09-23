@@ -19,8 +19,8 @@ require("lazy").setup({
 		version = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
 		build = "make install_jsregexp",
 	},
-	{ import = "config.plugins" },
-	{ import = "config.plugins.lsp" },
+	{ import = "plugins" },
+	-- { import = "plugins.lsp" },
 }, {
 	git = {
 		timeout = 300,

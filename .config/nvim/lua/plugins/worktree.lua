@@ -236,7 +236,7 @@ return {
 	config = function()
 		local worktree = require("git-worktree")
 		local snacks = require("snacks")
-		local utils = require("config.core.utils")
+		local utils = require("core.utils")
 
 		worktree.setup({
 			change_directory_command = "cd",

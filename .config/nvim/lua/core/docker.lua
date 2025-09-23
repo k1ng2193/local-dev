@@ -1,6 +1,6 @@
 local M = {}
-local utils = require("config.core.utils")
-local dev = require("config.core.local_dev")
+local utils = require("core.utils")
+local dev = require("core.dev")
 
 local container
 local port

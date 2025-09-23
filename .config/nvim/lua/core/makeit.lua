@@ -1,6 +1,6 @@
 local M = {}
 
-local utils = require("config.core.utils")
+local utils = require("core.utils")
 
 --- Given a path, open the file, extract all the Makefile keys,
 --  and return them as a list.
