@@ -1,5 +1,5 @@
 local title = "Git Worktrees"
-local commit_pat = ("[a-z0-9]"):rep(7)
+local commit_pat = ("[a-z0-9]+")
 
 local force_next_deletion = false
 
@@ -57,7 +57,8 @@ local function git_worktrees(opts, ctx)
 
 	local cwd = vim.fs.normalize(opts and opts.cwd or uv.cwd() or ".") or nil
 	cwd = snacks.git.get_root(cwd)
-	local pattern = "^([^%s]+)%s+(" .. commit_pat .. ")%s+%[([^%]]+)%].*$"
+	local pattern = "^(.-)%s+(" .. commit_pat .. ")%s+%[([^%]]+)%].*$"
+	-- local pattern = "^([^%s]+)%s+(" .. commit_pat .. ")%s+%[([^%]]+)%].*$"
 
 	return require("snacks.picker.source.proc").proc({
 		opts,

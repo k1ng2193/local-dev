@@ -29,12 +29,15 @@ function M.artifact()
 	local token_list = vim.fn.systemlist(cmd)
 	local token = token_list[1] -- Extract the first line of output
 	if token_list and token_list[1] ~= "" then
-		local config_cmd = "pip config set global.index-url 'https://aws:"
+		local pip_url = "'https://aws:"
 			.. token
 			.. "@vareto-544138963155.d.codeartifact.us-west-2.amazonaws.com/pypi/vareto-python/simple'"
+    local config_cmd = "pip3 config set global.index-url " .. pip_url
 		local result = vim.fn.system(config_cmd)
 		print(result) -- Print the result of the second command
 		vim.fn.system("cp ~/.config/pip/pip.conf pip.conf")
+		vim.env.PIP_INDEX_URL = pip_url
+		-- vim.env.UV_INDEX_URL = pip_url
 	else
 		error("Failed to get CodeArtifact token.")
 	end

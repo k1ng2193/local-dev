@@ -598,13 +598,13 @@ function M.get_docker_dependencies(opts, cb)
 
 		dev.docker_login()
 
-		create_docker_network(opts, cb)
+		-- create_docker_network(opts, cb)
 	end
 
 	if not stat or stat.type ~= "file" or not vim.env.AWS_PROFILE then
 		dev.sso(callback)
-	else
-		create_docker_network(opts, cb)
+	-- else
+	-- 	create_docker_network(opts, cb)
 	end
 end
 
