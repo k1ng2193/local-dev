@@ -45,6 +45,7 @@ return {
         "basedpyright",
 				"ruff",
 				"gopls",
+        "clangd",
 			},
 			automatic_enable = true,
 		})

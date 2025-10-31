@@ -19,6 +19,11 @@ return {
 				python = { "isort", "black" },
 				sh = { "shfmt" },
 				go = { "gci", "golines" },
+				cpp = { "clang-format" },
+				h = { "clang-format" },
+				m = { "clang-format" },
+				mm = { "clang-format" },
+				hpp = { "clang-format" },
 			},
 			-- format_on_save = {
 			--     lsp_fallback = true,
@@ -98,6 +103,10 @@ return {
 
 		conform.formatters.golines = {
 			prepend_args = { "--ignore-generated", "--max-len=120" },
+		}
+
+		conform.formatters.clang_format = {
+			args = { "--style=Google" },
 		}
 
 		vim.keymap.set({ "n", "v" }, "<leader>fm", function()
