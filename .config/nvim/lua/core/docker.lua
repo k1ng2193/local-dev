@@ -33,7 +33,9 @@ local function run_docker_compose(option, cb)
 			},
 		},
 	})
+
 	task:start()
+	overseer.window.open({ enter = true, direction = "bottom" })
 
 	if type(cb) == "function" then
 		cb()
@@ -791,7 +793,7 @@ function M.stop_containers()
 	ShutDownTimer = vim.defer_fn(function()
 		-- Terminate the process if it takes longer than 5 minutes
 		vim.notify("Containers are taking too long to shutdown. Please check the container statuses manually.")
-	end, 10000) -- milliseconds
+	end, 20000) -- milliseconds
 
 	vim.notify("Checking container statuses...")
 

@@ -5,7 +5,14 @@ return {
 	settings = {
 		gopls = {
 			buildFlags = { "-tags=dev,test,init,integration" },
-			directoryFilters = { "-.git", "-.vscode", "-.venv", "-.idea", "-.vscode-test", "-node_modules" },
+			directoryFilters = {
+				"-.git",
+				"-.vscode",
+				"-.venv",
+				"-.idea",
+				"-.vscode-test",
+				"-node_modules",
+			},
 			staticcheck = true,
 			usePlaceholders = true, -- enables placeholder parameters
 			completeUnimported = true, -- autocomplete unimported packages

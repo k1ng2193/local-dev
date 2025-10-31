@@ -1,12 +1,12 @@
 return {
     "mfussenegger/nvim-dap",
     dependencies = {
-        "mfussenegger/nvim-dap-python",
-        "theHamsta/nvim-dap-virtual-text",
+      "theHamsta/nvim-dap-virtual-text",
+        -- "mfussenegger/nvim-dap-python",
     },
     config = function()
         local dap = require("dap")
-        local dappy = require("dap-python")
+        -- local dappy = require("dap-python")
 
         vim.fn.sign_define("DapBreakpoint", { text = "🛑", texthl = "", linehl = "", numhl = "" })
         vim.fn.sign_define("DapStopped", { text = "🤔", texthl = "", linehl = "", numhl = "" })
@@ -15,8 +15,8 @@ return {
         --   return "/Users/k1ng/.pyenv/shims/python"
         -- end
         -- dappy.setup("~/.virtualenvs/debugpy/bin/python")
-        dappy.setup("uv")
-        dappy.test_runner = "pytest"
+        -- dappy.setup("uv")
+        -- dappy.test_runner = "pytest"
 
         vim.keymap.set("n", "<leader>bp", function() dap.toggle_breakpoint() end, { noremap = true, silent = true, desc = "Toggle Breakpoint" })
         vim.keymap.set("n", "<leader>dd", function() dap.clear_breakpoints() end, { noremap = true, silent = true, desc = "Clear Breakpoints" })
@@ -39,7 +39,7 @@ return {
         -- vim.keymap.set("n", "<leader>dc", function() dappy.test_class() end, { noremap = true, silent = true, desc = "Test Class" })
         -- vim.keymap.set("n", "<leader>ds", function() dappy.debug_selection() end, { noremap = true, silent = true, desc = "Test Selection" })
 
-        table.insert(dap.configurations.python, {
+        table.insert(dap.configurations, {
             type = "python",
             request = "launch",
             name = "Launch Pipeline Configuration",
@@ -69,7 +69,7 @@ return {
             console = "integratedTerminal",
         })
 
-        table.insert(dap.configurations.python, {
+        table.insert(dap.configurations, {
             type = "python",
             request = "attach",
             name = "Attach Data API",
@@ -88,7 +88,7 @@ return {
             },
         })
 
-        table.insert(dap.configurations.python, {
+        table.insert(dap.configurations, {
             type = "python",
             request = "attach",
             name = "Attach Shared Payload Data API",
@@ -110,6 +110,78 @@ return {
                 },
             },
         })
+
+        -- table.insert(dap.configurations.python, {
+        --     type = "python",
+        --     request = "launch",
+        --     name = "Launch Pipeline Configuration",
+        --     program = "${file}",
+        --     args = function()
+        --         local args_string = vim.fn.input("Arguments: ")
+        --         -- Check if the user entered any arguments
+        --         if args_string and args_string ~= "" then
+        --             -- Split the string into individual arguments using spaces as separators
+        --             return vim.split(args_string, " ")
+        --         else
+        --             -- If the user didn't enter any arguments, return an empty table
+        --             return {}
+        --         end
+        --     end,
+        --     env = function()
+        --         local environment = vim.fn.input("Environment: "):lower()
+        --         if environment == "prod" or environment == "release" or environment == "staging" then
+        --             return {
+        --                 RECORD_BUCKET_NAME = environment .. "-integration-record-us-west-2",
+        --                 GOLD_BUCKET_NAME = environment .. "-integration-gold-us-west-2",
+        --             }
+        --         else
+        --             error("Invalid environment")
+        --         end
+        --     end,
+        --     console = "integratedTerminal",
+        -- })
+        --
+        -- table.insert(dap.configurations.python, {
+        --     type = "python",
+        --     request = "attach",
+        --     name = "Attach Data API",
+        --     connect = function()
+        --         local host = vim.fn.input('Host [127.0.0.1]: ')
+        --         host = host ~= '' and host or '127.0.0.1'
+        --         local port = tonumber(vim.fn.input('Port [5678]: ')) or 5678
+        --         return { host = host, port = port }
+        --     end,
+        --     cwd = vim.fn.getcwd(),
+        --     pathMappings = {
+        --         {
+        --             localRoot = vim.fn.getcwd(),
+        --             remoteRoot = "/code"
+        --         },
+        --     },
+        -- })
+        --
+        -- table.insert(dap.configurations.python, {
+        --     type = "python",
+        --     request = "attach",
+        --     name = "Attach Shared Payload Data API",
+        --     connect = function()
+        --         local host = vim.fn.input('Host [127.0.0.1]: ')
+        --         host = host ~= '' and host or '127.0.0.1'
+        --         local port = tonumber(vim.fn.input('Port [5678]: ')) or 5678
+        --         return { host = host, port = port }
+        --     end,
+        --     cwd = vim.fn.getcwd(),
+        --     pathMappings = {
+        --         {
+        --             localRoot = vim.fn.getcwd(),
+        --             remoteRoot = "/code"
+        --         },
+        --         {
+        --             localRoot = "~/vareto-repo/shared-payload-models/vareto_pydantic_models",
+        --             remoteRoot = "/code/vareto_pydantic_models"
+        --         },
+        --     },
+        -- })
 
         require("nvim-dap-virtual-text").setup({
             enabled = true,                     -- enable this plugin (the default)

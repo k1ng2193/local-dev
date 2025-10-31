@@ -23,6 +23,7 @@ return {
 		-- Line length and complexity
 		line_length = 100,
 		preview = true,
+    hoverProvider = false,
 
 		-- Selected and ignored rules
 		select = {
