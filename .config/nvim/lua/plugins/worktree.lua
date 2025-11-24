@@ -1,3 +1,7 @@
+--- @class snacks.picker
+--- @field git_worktrees fun(): nil
+--- @field create_git_worktree fun(): nil
+
 local title = "Git Worktrees"
 local commit_pat = "[a-z0-9]+"
 
@@ -53,9 +57,11 @@ end
 local function git_worktrees(opts, ctx)
 	local uv = vim.uv or vim.loop
 	local args = git_args(opts.args, "--no-pager", "worktree", "list", "-v")
+	---
 	--- @type string?
-	local cwd = vim.fs.normalize(opts and opts.cwd or uv.cwd() or ".") or nil
+	local cwd = vim.fs.normalize(opts and opts.cwd or uv.cwd() or ".")
 	cwd = Snacks.git.get_root(cwd)
+
 	local pattern = "^(.-)%s+(" .. commit_pat .. ")%s+%[([^%]]+)%].*$"
 
 	opts = vim.tbl_extend("force", opts or {}, {
@@ -241,11 +247,11 @@ return {
 
 		worktree.on_tree_change(function(op, metadata)
 			if op == worktree.Operations.Create then
-				print("Created " .. metadata.branch .. " branch tracking " .. metadata.upstream)
+				vim.notify("Created " .. metadata.branch .. " branch tracking " .. metadata.upstream)
 			end
 
 			if op == worktree.Operations.Switch then
-				print("Switched from " .. metadata.prev_path .. " to " .. metadata.path)
+				vim.notify("Switched from " .. metadata.prev_path .. " to " .. metadata.path)
 				utils.deactivate_venv()
 			end
 		end)
@@ -265,7 +271,6 @@ return {
 		-- 	{ noremap = true, silent = true, desc = "Create Git Worktree" }
 
 		vim.keymap.set("n", "<leader>fw", function()
-			--- @class snacks.picker
 			Snacks.picker.git_worktrees()
 		end, { desc = "Search Git Worktree" })
 		vim.keymap.set("n", "<leader>wc", function()
