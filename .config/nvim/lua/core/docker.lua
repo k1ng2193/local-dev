@@ -488,8 +488,8 @@ end
 
 -- Function to check if an individual container is running
 ---@param local_container string
----@param delay integer
----@param cb function
+---@param delay integer | nil
+---@param cb function | nil
 local function check_container(local_container, delay, cb)
 	local result = vim.fn.system("docker ps --filter 'name=" .. local_container .. "' --format '{{.Names}}'")
 
@@ -498,16 +498,15 @@ local function check_container(local_container, delay, cb)
 		if local_container == container then
 			container = nil
 		end
-		if KillTimer and not KillTimer:is_closing() then
-			KillTimer:close()
-		end
 	else
 		vim.notify("The " .. local_container .. " is still shutting down")
 
 		-- Reschedule the function to run again after a delay
-		vim.defer_fn(function()
-			cb(local_container, delay, check_container)
-		end, delay)
+    if cb and delay then
+      vim.defer_fn(function()
+        cb(local_container, delay, check_container)
+      end, delay)
+    end
 	end
 end
 
@@ -757,20 +756,11 @@ function M.kill_container()
 		local docker_coroutine = DockerCoroutine(docker_command)
 		coroutine.resume(docker_coroutine)
 
-		KillTimer = vim.defer_fn(function()
-			-- Terminate the process if it takes longer than 5 minutes
-			vim.notify(
-				"The "
-					.. local_container
-					.. " container is taking too long to shutdown. Please check the container statuses manually."
-			)
-		end, 15000) -- milliseconds
-
 		vim.notify("Checking container status...")
 
 		-- Schedule the asynchronous function to be executed asynchronously in the next event loop iteration
 		vim.defer_fn(function()
-			check_container(local_container, 10000, check_container)
+			check_container(local_container)
 		end, 5000)
 	end)
 end

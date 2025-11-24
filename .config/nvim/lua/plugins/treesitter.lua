@@ -19,6 +19,7 @@ return {
 				"python",
 				"rust",
 				"c",
+        "cpp",
 				"lua",
 				"vim",
 				"vimdoc",

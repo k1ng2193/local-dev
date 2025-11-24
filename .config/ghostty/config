@@ -1,4 +1,9 @@
-window-padding-color = background
 theme = "Catppuccin Mocha"
 font-family = "SauceCodePro NFM Medium"
 font-size = 18
+
+# Navigate Ghostty splits (Vim-style HJKL using CMD)
+keybind = super+h=goto_split:left
+keybind = super+l=goto_split:right
+keybind = super+j=goto_split:down
+keybind = super+k=goto_split:up

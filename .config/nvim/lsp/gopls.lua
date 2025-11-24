@@ -13,6 +13,7 @@ return {
 				"-.vscode-test",
 				"-node_modules",
 			},
+      expandWorkspaceToModule = true, -- Prevents LSP from treating module dependencies as part of your workspace
 			staticcheck = true,
 			usePlaceholders = true, -- enables placeholder parameters
 			completeUnimported = true, -- autocomplete unimported packages

@@ -220,3 +220,6 @@ vim.keymap.set({ "n", "v" }, "<leader>y", '"+y<CR>', opts)
 
 opts.desc = "Delete to System Clipboard"
 vim.keymap.set({ "n", "v" }, "<leader>d", '"+d<CR>', opts)
+
+opts.desc = "Clean Buffers and Restart LSP"
+vim.keymap.set('n', '<leader>lc', ':CleanAndRestartLsp<CR>', opts)

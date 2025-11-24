@@ -20,12 +20,13 @@ local function get_makefile_options(path)
 		-- Iterate through each line in the Makefile
 		for line in file:lines() do
 			-- Check for lines starting with a target rule (e.g., "target: dependencies")
-			local target = line:match("^([%w%-_]+):$")
+			local target = line:match("^([%w%-_]+):.*$")
 			if target then
 				in_target = true
 				count = count + 1
 				-- Exclude the ":" and add the option to the list with text and value fields
-				table.insert(options, { text = count .. " - " .. target, value = target })
+        local target_name = line:match("^([%w%-_]+):")
+				table.insert(options, { text = count .. " - " .. target_name, value = target_name })
 			elseif in_target then
 				-- If we're inside a target block, stop adding options
 				in_target = false

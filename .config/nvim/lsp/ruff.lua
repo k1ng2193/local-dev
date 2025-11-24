@@ -6,14 +6,14 @@ return {
 		end
 	end,
 	root_dir = function(bufnr, on_dir)
-		local root_markers = { "uv.lock", ".venv", ".git" }
+		local root_markers = { "uv.lock", ".venv" }
 		local current_dir = vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr))
 		local root_path = vim.fs.find(root_markers, { upward = true, stop = current_dir })
 		if root_path then
 			on_dir(vim.fs.dirname(root_path[1]))
 		end
 	end,
-	root_markers = { "pyproject.toml", "requirements.txt" },
+	root_markers = { "pyproject.toml", "requirements.txt", ".git" },
 	settings = {
 		-- Complexity (equivalent to --max-complexity)
 		-- lint = {

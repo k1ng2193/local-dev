@@ -11,6 +11,7 @@ vim.g.loaded_ruby_provider = 0
 vim.g.loaded_python_provider = 0
 
 require("config.autocmds")
+require("config.usercmds")
 require("config.options")
 require("config.remap")
 require("core.lsp")
