@@ -159,7 +159,7 @@ end
 local function get_body_template(args)
 	local local_cwd = vim.fn.getcwd()
 	local template = local_cwd .. "/pull_request_template.md"
-	local stat = vim.loop.fs_stat(template)
+	local stat = vim.uv.fs_stat(template)
 
 	if stat and stat.type == "file" then
 		local body = utils.read_file(template)

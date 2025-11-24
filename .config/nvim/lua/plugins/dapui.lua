@@ -3,16 +3,12 @@ return {
 	dependencies = {
 		"mfussenegger/nvim-dap",
 		"nvim-neotest/nvim-nio",
-		"folke/neodev.nvim",
 	},
 	config = function()
 		local dap = require("dap")
 		local dapui = require("dapui")
 
 		dapui.setup()
-		require("neodev").setup({
-			library = { plugins = { "nvim-dap-ui" }, types = true },
-		})
 
 		dap.listeners.before.attach.dapui_config = function()
 			dapui.open()

@@ -177,4 +177,15 @@ function M.deactivate_venv()
 	vim.env.VIRTUAL_ENV_PROMPT = nil
 end
 
+--- @param bufnr integer
+--- @param on_dir function
+--- @param root_markers table
+function M.find_lsp_root_dir(bufnr, on_dir, root_markers)
+	local current_dir = vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr))
+	local root_path = vim.fs.find(root_markers, { upward = true, stop = current_dir })
+	if root_path then
+		on_dir(vim.fs.dirname(root_path[1]))
+	end
+end
+
 return M
