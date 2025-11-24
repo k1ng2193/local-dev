@@ -20,7 +20,6 @@ require("lazy").setup({
 		build = "make install_jsregexp",
 	},
 	{ import = "plugins" },
-	-- { import = "plugins.lsp" },
 }, {
 	git = {
 		timeout = 300,

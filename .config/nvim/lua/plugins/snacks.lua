@@ -1,5 +1,10 @@
+--- @class snacks.picker
+--- @field todo_comments fun(opts): nil
+--- @field makeit fun(): nil
+
 return {
 	"folke/snacks.nvim",
+	dependencies = { "folke/todo-comments.nvim" },
 	priority = 1000,
 	lazy = false,
 	opts = {
@@ -33,7 +38,7 @@ return {
 			end,
 		},
 		picker = {
-      enabled = true,
+			enabled = true,
 			sources = {
 				makeit = require("core.makeit").make_picker(),
 			},
@@ -69,6 +74,8 @@ return {
 				input = {
 					keys = {
 						["<c-x>"] = { "edit_split", mode = { "i", "n" } },
+						["<a-s>"] = { "flash", mode = { "n", "i" } },
+						["s"] = { "flash" },
 					},
 				},
 			},
@@ -96,69 +103,90 @@ return {
 					vim.fn.setqflist(qf)
 					require("trouble").open("quickfix")
 				end,
+				flash = function(picker)
+					require("flash").jump({
+						pattern = "^",
+						label = { after = { 0, 0 } },
+						search = {
+							mode = "search",
+							exclude = {
+								function(win)
+									return vim.bo[vim.api.nvim_win_get_buf(win)].filetype ~= "snacks_picker_list"
+								end,
+							},
+						},
+						action = function(match)
+							local idx = picker.list:row2idx(match.pos[1])
+							picker.list:_move(idx, true, true)
+						end,
+					})
+				end,
 			},
 		},
 	},
 	config = function(_, opts)
-		local snacks = require("snacks")
-		snacks.setup(opts)
+		Snacks.setup(opts)
 
-		-- Your keymaps translated
 		vim.keymap.set("n", "<leader><leader>", function()
-			snacks.picker.smart()
+			Snacks.picker.smart()
 		end, { desc = "Smart Find Files" })
 		vim.keymap.set("n", "<leader>ff", function()
-			snacks.picker.files()
+			Snacks.picker.files()
 		end, { desc = "Search Files" })
 		vim.keymap.set("n", "<leader>fg", function()
-			snacks.picker.git_status()
+			Snacks.picker.git_status()
 		end, { desc = "Search Git Status" })
 		vim.keymap.set("n", "<leader>fx", function()
-			snacks.picker.git_stash()
+			Snacks.picker.git_stash()
 		end, { desc = "Search Git Stash" })
 		vim.keymap.set("n", "<leader>gl", function()
-			snacks.picker.git_log()
+			Snacks.picker.git_log()
 		end, { desc = "Search Git Log" })
 		vim.keymap.set("n", "<leader>ft", function()
-			snacks.picker.git_branches()
+			Snacks.picker.git_branches()
 		end, { desc = "Search Git Branches" })
 		vim.keymap.set("n", "<leader>gd", function()
-			snacks.picker.git_diff()
+			Snacks.picker.git_diff()
 		end, { desc = "Search Git Log" })
 		vim.keymap.set("n", "<leader>fs", function()
-			snacks.picker.grep()
+			Snacks.picker.grep()
 		end, { desc = "Search String" })
 		vim.keymap.set("n", "<leader>fb", function()
-			snacks.picker.buffers()
+			Snacks.picker.buffers()
 		end, { desc = "Search Buffer" })
 		vim.keymap.set("n", "<leader>fk", function()
-			snacks.picker.keymaps()
+			Snacks.picker.keymaps()
 		end, { desc = "Search Keymaps" })
 		vim.keymap.set("n", "<leader>fh", function()
-			snacks.picker.help()
+			Snacks.picker.help()
 		end, { desc = "Search Help" })
 		vim.keymap.set("n", "<leader>rg", function()
-			snacks.picker.registers()
+			Snacks.picker.registers()
 		end, { desc = "Search Registers" })
-		vim.keymap.set("n", "<leader>mp", function()
-			snacks.picker.makeit()
-		end, { desc = "Open Makefile Picker" })
 
 		-- LSP keymaps
 		vim.keymap.set("n", "gd", function()
-			snacks.picker.lsp_definitions()
+			Snacks.picker.lsp_definitions()
 		end, { desc = "Go To Definition" })
 		vim.keymap.set("n", "gi", function()
-			snacks.picker.lsp_implementations()
+			Snacks.picker.lsp_implementations()
 		end, { desc = "Go To Implementation" })
 		vim.keymap.set("n", "gt", function()
-			snacks.picker.lsp_type_definitions()
+			Snacks.picker.lsp_type_definitions()
 		end, { desc = "Go To Type Definition" })
 		vim.keymap.set("n", "gr", function()
-			snacks.picker.lsp_references()
+			Snacks.picker.lsp_references()
 		end, { desc = "Go To References" })
 		vim.keymap.set("n", "bd", function()
-			snacks.picker.diagnostics()
+			Snacks.picker.diagnostics()
 		end, { desc = "Show Buffer Diagnostics" })
+
+		-- Custom Pickers
+		vim.keymap.set("n", "<leader>do", function()
+			Snacks.picker.todo_comments({ keywords = { "TODO", "FIX", "FIXME" } })
+		end, { desc = "Find TODO/FIX/FIXME" })
+		vim.keymap.set("n", "<leader>mp", function()
+			Snacks.picker.makeit()
+		end, { desc = "Open Makefile Picker" })
 	end,
 }

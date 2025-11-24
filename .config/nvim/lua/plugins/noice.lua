@@ -14,6 +14,7 @@ return {
 	},
 	config = function()
 		require("notify").setup({
+			merge_duplicates = true,
 			background_colour = "#000000",
 		})
 

@@ -1,5 +1,9 @@
+--- @class snacks.picker
+--- @field git_worktrees fun(): nil
+--- @field create_git_worktree fun(): nil
+
 local title = "Git Worktrees"
-local commit_pat = ("[a-z0-9]+")
+local commit_pat = "[a-z0-9]+"
 
 local force_next_deletion = false
 
@@ -52,57 +56,52 @@ end
 
 local function git_worktrees(opts, ctx)
 	local uv = vim.uv or vim.loop
-	local snacks = require("snacks")
 	local args = git_args(opts.args, "--no-pager", "worktree", "list", "-v")
+	---
+	--- @type string?
+	local cwd = vim.fs.normalize(opts and opts.cwd or uv.cwd() or ".")
+	cwd = Snacks.git.get_root(cwd)
 
-	local cwd = vim.fs.normalize(opts and opts.cwd or uv.cwd() or ".") or nil
-	cwd = snacks.git.get_root(cwd)
 	local pattern = "^(.-)%s+(" .. commit_pat .. ")%s+%[([^%]]+)%].*$"
-	-- local pattern = "^([^%s]+)%s+(" .. commit_pat .. ")%s+%[([^%]]+)%].*$"
 
-	return require("snacks.picker.source.proc").proc({
-		opts,
-		{
-			cwd = cwd,
-			cmd = "git",
-			args = args,
-			transform = function(item)
-				item.cwd = cwd
-				if item.text:match("%(bare%)") then
-					return false
-				end
-				local path, commit, branch = item.text:match(pattern)
-				if path then
-					item.current = path == cwd
-					item.path = path
-					item.branch = branch
-					item.commit = commit
-					return
-				end
-
-				snacks.notify.warn("failed to parse branch: " .. item.text)
+	opts = vim.tbl_extend("force", opts or {}, {
+		cwd = cwd,
+		cmd = "git",
+		args = args,
+		transform = function(item)
+			item.cwd = cwd
+			if item.text:match("%(bare%)") then
 				return false
-			end,
-		},
-	}, ctx)
+			end
+			local path, commit, branch = item.text:match(pattern)
+			if path then
+				item.current = path == cwd
+				item.path = path
+				item.branch = branch
+				item.commit = commit
+				return
+			end
+
+			Snacks.notify.warn("failed to parse branch: " .. item.text)
+			return false
+		end,
+	})
+
+	return require("snacks.picker.source.proc").proc(opts, ctx)
 end
 
 local function git_commit(item, picker)
-	local snacks = require("snacks")
-
-	local a = snacks.picker.util.align
+	local a = Snacks.picker.util.align
 	local ret = {}
 	ret[#ret + 1] = { picker.opts.icons.git.commit, "SnacksPickerGitCommit" }
 	ret[#ret + 1] = { a(item.commit, 8, { truncate = true }), "SnacksPickerGitCommit" }
-	snacks.picker.highlight.markdown(ret)
+	Snacks.picker.highlight.markdown(ret)
 
 	return ret
 end
 
 local function git_worktree(item, picker)
-	local snacks = require("snacks")
-
-	local a = snacks.picker.util.align
+	local a = Snacks.picker.util.align
 	local ret = {}
 	if item.current then
 		ret[#ret + 1] = { a("", 2), "SnacksPickerGitBranchCurrent" }
@@ -112,9 +111,9 @@ local function git_worktree(item, picker)
 	ret[#ret + 1] = { a(item.branch, 70, { truncate = true }), "SnacksPickerGitBranch" }
 	ret[#ret + 1] = { " " }
 
-	local offset = snacks.picker.highlight.offset(ret)
+	local offset = Snacks.picker.highlight.offset(ret)
 	local commit = git_commit(item, picker)
-	snacks.picker.highlight.fix_offset(commit, offset)
+	Snacks.picker.highlight.fix_offset(commit, offset)
 	vim.list_extend(ret, commit)
 
 	return ret
@@ -236,7 +235,6 @@ return {
 	},
 	config = function()
 		local worktree = require("git-worktree")
-		local snacks = require("snacks")
 		local utils = require("core.utils")
 
 		worktree.setup({
@@ -249,11 +247,11 @@ return {
 
 		worktree.on_tree_change(function(op, metadata)
 			if op == worktree.Operations.Create then
-				print("Created " .. metadata.branch .. " branch tracking " .. metadata.upstream)
+				vim.notify("Created " .. metadata.branch .. " branch tracking " .. metadata.upstream)
 			end
 
 			if op == worktree.Operations.Switch then
-				print("Switched from " .. metadata.prev_path .. " to " .. metadata.path)
+				vim.notify("Switched from " .. metadata.prev_path .. " to " .. metadata.path)
 				utils.deactivate_venv()
 			end
 		end)
@@ -273,10 +271,10 @@ return {
 		-- 	{ noremap = true, silent = true, desc = "Create Git Worktree" }
 
 		vim.keymap.set("n", "<leader>fw", function()
-			snacks.picker.git_worktrees()
+			Snacks.picker.git_worktrees()
 		end, { desc = "Search Git Worktree" })
 		vim.keymap.set("n", "<leader>wc", function()
-			snacks.picker.create_git_worktree()
+			Snacks.picker.create_git_worktree()
 		end, { desc = "Create Git Worktree" })
 	end,
 }
