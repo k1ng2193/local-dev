@@ -1,9 +1,27 @@
 theme = "Catppuccin Mocha"
+fullscreen = false
 font-family = "SauceCodePro NFM Medium"
 font-size = 18
+
+keybind = global:unconsumed:super+shift+r=reload_config
 
 # Navigate Ghostty splits (Vim-style HJKL using CMD)
 keybind = super+h=goto_split:left
 keybind = super+l=goto_split:right
 keybind = super+j=goto_split:down
 keybind = super+k=goto_split:up
+
+custom-shader = shaders/cursor_smear.glsl
+# custom-shader = shaders/cursor_blaze_no_trail.glsl
+# custom-shader = shaders/cursor_blaze_tapered.glsl
+# custom-shader = shaders/cursor_border_1.glsl
+# custom-shader = shaders/cursor_frozen.glsl
+# custom-shader = shaders/cursor_smear_fade.glsl
+# custom-shader = shaders/cursor_smear_gradient.glsl
+# custom-shader = shaders/cursor_smear_rainbow.glsl
+# custom-shader = shaders/debug_cursor_animated.glsl
+# custom-shader = shaders/debug_cursor_static.glsl
+# custom-shader = shaders/manga_slash.glsl
+# custom-shader = shaders/party_sparks.glsl
+# custom-shader = shaders/shake.glsl
+# custom-shader = shaders/sparks.glsl
