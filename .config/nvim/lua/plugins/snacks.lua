@@ -137,7 +137,16 @@ return {
 			Snacks.picker.git_status()
 		end, { desc = "Search Git Status" })
 		vim.keymap.set("n", "<leader>fx", function()
-			Snacks.picker.git_stash()
+			Snacks.picker.git_stash({
+				win = {
+					input = {
+						keys = {
+							["<Tab>"] = { "git_stage", mode = { "n", "i" } },
+							["<c-r>"] = { "git_restore", mode = { "n", "i" }, nowait = true },
+						},
+					},
+				},
+			})
 		end, { desc = "Search Git Stash" })
 		vim.keymap.set("n", "<leader>gl", function()
 			Snacks.picker.git_log()
@@ -147,7 +156,7 @@ return {
 		end, { desc = "Search Git Branches" })
 		vim.keymap.set("n", "<leader>gd", function()
 			Snacks.picker.git_diff()
-		end, { desc = "Search Git Log" })
+		end, { desc = "Search Git Diff" })
 		vim.keymap.set("n", "<leader>fs", function()
 			Snacks.picker.grep()
 		end, { desc = "Search String" })

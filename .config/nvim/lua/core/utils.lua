@@ -1,5 +1,5 @@
 local M = {}
----
+
 --- Given a string, convert 'slash' to 'inverted slash' if on windows, and vice versa on UNIX.
 -- Then return the resulting string.
 ---@param path string
@@ -134,6 +134,7 @@ end
 
 function M.activate_venv()
 	local cwd = vim.fn.getcwd()
+  vim.fn.finddir()
 	local file_path = M.find_path_for_file("pyproject.toml", 2, 0, cwd)
 	local venv_path = file_path .. "/.venv"
 
