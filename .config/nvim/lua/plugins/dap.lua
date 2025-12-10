@@ -59,7 +59,7 @@ return {
 		-- vim.keymap.set("n", "<leader>dc", function() dappy.test_class() end, { noremap = true, silent = true, desc = "Test Class" })
 		-- vim.keymap.set("n", "<leader>ds", function() dappy.debug_selection() end, { noremap = true, silent = true, desc = "Test Selection" })
 
-		table.insert(dap.configurations, {
+		table.insert(dap.configurations.python, {
 			type = "python",
 			request = "launch",
 			name = "Launch Pipeline Configuration",
@@ -89,7 +89,7 @@ return {
 			console = "integratedTerminal",
 		})
 
-		table.insert(dap.configurations, {
+		table.insert(dap.configurations.python, {
 			type = "python",
 			request = "attach",
 			name = "Attach Data API",

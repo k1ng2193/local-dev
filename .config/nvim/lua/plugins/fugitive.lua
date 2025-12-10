@@ -8,7 +8,6 @@ local api = vim.api
 ---@param wrap boolean?
 local function async_git(git_args, wrap)
   local git_str = table.concat(git_args, " ")
-  vim.notify("Executing git " .. git_str, vim.log.levels.INFO)
 
   local stdout = uv.new_pipe(false)
   local stderr = uv.new_pipe(false)
@@ -27,51 +26,19 @@ local function async_git(git_args, wrap)
   vim.wo[win].wrap = wrap or false
   vim.wo[win].cursorline = true
 
+  local on_success = function()
+    if vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_close(win, true)
+    end
+  end
+
+  local proc = utils.async_job(bufnr, { cmd = "git", args = git_args, cwd = vim.fn.FugitiveWorkTree() }, on_success)
+
   vim.keymap.set("n", "q", ":close<CR>", { buffer = bufnr, silent = true })
   vim.keymap.set("n", "<Esc>", ":close<CR>", { buffer = bufnr, silent = true })
-
-  local handle
-  handle = uv.spawn("git", {
-    args = git_args,
-    cwd = vim.fn.FugitiveWorkTree(),
-    stdio = { nil, stdout, stderr },
-  }, function(code, signal)
-    stdout:close()
-    stderr:close()
-    handle:close()
-
-    vim.schedule(function()
-      if code == 0 then
-        if vim.api.nvim_win_is_valid(win) then
-          vim.api.nvim_win_close(win, true)
-        end
-        vim.notify("Successfully executed git " .. git_str, vim.log.levels.INFO)
-      else
-        vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, {
-          "",
-          "--- Commit failed with exit code: " .. code .. " ---",
-        })
-      end
-    end)
-  end)
-
-  stdout:read_start(function(err, data)
-    if data then
-      vim.schedule(function()
-        local lines = vim.split(data, "\n", { trimempty = true })
-        vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
-      end)
-    end
-  end)
-
-  stderr:read_start(function(err, data)
-    if data then
-      vim.schedule(function()
-        local lines = vim.split(data, "\n", { trimempty = true })
-        vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
-      end)
-    end
-  end)
+  vim.keymap.set("n", "<C-c>", function()
+    utils.kill_gracefully(proc)
+  end, { buffer = bufnr, silent = true })
 end
 
 ---@param base_args string[]

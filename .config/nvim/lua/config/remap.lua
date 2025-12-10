@@ -6,18 +6,18 @@ local makeit = require("core.makeit")
 
 local opts = { noremap = true, silent = true }
 
-opts.desc = "SSO prod"
-vim.keymap.set("n", "<leader>sso", function()
-  docker.get_docker_dependencies()
-end, opts)
-opts.desc = "CodeArtifact"
-vim.keymap.set("n", "<leader>art", function()
-  dev.artifact()
-end, opts)
-opts.desc = "Docker Login"
-vim.keymap.set("n", "<leader>dl", function()
-  docker.docker_login()
-end, opts)
+-- opts.desc = "SSO prod"
+-- vim.keymap.set("n", "<leader>sso", function()
+--   docker.get_docker_dependencies()
+-- end, opts)
+-- opts.desc = "CodeArtifact"
+-- vim.keymap.set("n", "<leader>art", function()
+--   dev.artifact()
+-- end, opts)
+-- opts.desc = "Docker Login"
+-- vim.keymap.set("n", "<leader>dl", function()
+--   docker.docker_login()
+-- end, opts)
 
 -- opts.desc = "Show Yank Register"
 -- vim.keymap.set("n", "<leader>rg", ":reg<CR>", opts)
@@ -230,3 +230,6 @@ opts.desc = "SSH Tunnel Stop"
 vim.keymap.set("n", "<C-t>s", ":TunnelStop<CR>", opts)
 opts.desc = "SSH Tunnel Status"
 vim.keymap.set("n", "<C-t>c", ":TunnelStatus<CR>", opts)
+
+opts.desc = "AWS SSO Login"
+vim.keymap.set("n", "<leader>sso", ":SSO<CR>", opts)

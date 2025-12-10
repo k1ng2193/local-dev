@@ -188,9 +188,7 @@ local function execute_remote_docker_command(args, callback)
     stderr:read_stop()
     stdout:close()
     stderr:close()
-    if handle then
-      handle:close()
-    end
+    handle:close()
 
     vim.schedule(function()
       callback(code, signal, output)

@@ -90,7 +90,7 @@ function M.open_floating_window(bufnr, placement, width_resize, height_resize, b
     title_pos = 'center',
 	}
 
-	local win = vim.api.nvim_open_win(bufnr, true, opts)
+	local win = vim.api.nvim_open_win(bufnr, false, opts)
 	return win
 end
 

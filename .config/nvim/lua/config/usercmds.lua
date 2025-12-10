@@ -1,3 +1,6 @@
+local utils = require("core.utils")
+local win_utils = require("core.win")
+
 vim.api.nvim_create_user_command("CleanAndRestartLsp", function()
   local current = vim.api.nvim_get_current_buf()
 
@@ -52,7 +55,10 @@ vim.api.nvim_create_user_command("Tunnel", function()
 
           local existing = vim.fn.system("lsof -ti :" .. local_port):gsub("%s+", "")
           if existing ~= "" then
-            vim.notify("⚠️  Port " .. local_port .. " already in use (PID: " .. existing .. ")", vim.log.levels.WARN)
+            vim.notify(
+              "⚠️  Port " .. local_port .. " already in use (PID: " .. existing .. ")",
+              vim.log.levels.WARN
+            )
             return
           end
 
@@ -165,15 +171,52 @@ vim.api.nvim_create_user_command("TunnelStop", function()
 end, {})
 
 vim.api.nvim_create_user_command("TunnelStatus", function()
-  vim.notify("🔍 Active SSH Tunnels:")
-
   local tunnels = vim.fn.systemlist("ps aux | grep 'ssh.*-L' | grep -v grep")
 
   if #tunnels == 0 then
-    print("  No SSH tunnels found")
+    vim.notify("No SSH tunnels found", vim.log.levels.INFO)
   else
-    for _, line in ipairs(tunnels) do
-      print("  " .. line)
-    end
+    vim.notify("🔍 Active SSH Tunnels:\n" .. table.concat(tunnels, "\n"))
   end
+end, {})
+
+vim.api.nvim_create_user_command("SSO", function()
+  local profiles = vim.fn.system("grep '^\\[profile' ~/.aws/config | cut -d ' ' -f 2 | tr -d '[]' | sort")
+  local lines = utils.split_multiline_string(profiles)
+
+  vim.ui.select(lines, {
+    prompt = "AWS Profile",
+  }, function(choice)
+    if choice == nil then
+      return
+    end
+
+    vim.env.AWS_PROFILE = choice
+
+    local stdout = vim.uv.new_pipe(false)
+    local stderr = vim.uv.new_pipe(false)
+    assert(stdout, "SSO command failed: stdout pipe is nil")
+    assert(stdout, "SSO command failed: stderr pipe is nil")
+
+    local bufnr = vim.api.nvim_create_buf(false, true)
+    vim.bo[bufnr].bufhidden = "wipe"
+    vim.bo[bufnr].filetype = "aws"
+    vim.bo[bufnr].buftype = "nofile"
+
+    local win = win_utils.open_floating_window(bufnr, "right", 0.30, 1, "single", "AWS SSO")
+
+    vim.wo[win].wrap = true
+    vim.wo[win].cursorline = true
+
+    local proc = utils.async_job(bufnr, { cmd = "aws", args = { "sso", "login" }, cwd = vim.fn.getcwd() })
+
+    vim.keymap.set("n", "q", ":close<CR>", { buffer = bufnr, silent = true })
+    vim.keymap.set("n", "<Esc>", ":close<CR>", { buffer = bufnr, silent = true })
+    vim.keymap.set("n", "<C-c>", function()
+      if vim.api.nvim_win_is_valid(win) then
+        vim.api.nvim_win_close(win, true)
+      end
+      utils.kill_gracefully(proc)
+    end, { buffer = bufnr, silent = true })
+  end)
 end, {})
