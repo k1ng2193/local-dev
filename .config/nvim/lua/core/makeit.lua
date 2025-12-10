@@ -86,7 +86,7 @@ function M.make_picker()
 		title = "Makeit",
 		finder = function()
 			local uv = vim.uv or vim.loop
-			local cwd = vim.fs.normalize(uv.cwd() or ".") or nil
+			local cwd = vim.fs.normalize(uv.cwd() or ".")
 			local path = utils.os_path(cwd .. "/Makefile")
 			local options = {}
 			if path ~= nil then

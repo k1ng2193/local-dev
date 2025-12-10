@@ -1,23 +1,23 @@
 vim.g.mapleader = " "
 
+local dev = require("core.dev")
 local docker = require("core.docker")
 local makeit = require("core.makeit")
-local dev = require("core.dev")
 
 local opts = { noremap = true, silent = true }
 
-opts.desc = "SSO prod"
-vim.keymap.set("n", "<leader>sso", function()
-	docker.get_docker_dependencies()
-end, opts)
-opts.desc = "CodeArtifact"
-vim.keymap.set("n", "<leader>art", function()
-	dev.artifact()
-end, opts)
-opts.desc = "Docker Login"
-vim.keymap.set("n", "<leader>dl", function()
-	docker.docker_login()
-end, opts)
+-- opts.desc = "SSO prod"
+-- vim.keymap.set("n", "<leader>sso", function()
+--   docker.get_docker_dependencies()
+-- end, opts)
+-- opts.desc = "CodeArtifact"
+-- vim.keymap.set("n", "<leader>art", function()
+--   dev.artifact()
+-- end, opts)
+-- opts.desc = "Docker Login"
+-- vim.keymap.set("n", "<leader>dl", function()
+--   docker.docker_login()
+-- end, opts)
 
 -- opts.desc = "Show Yank Register"
 -- vim.keymap.set("n", "<leader>rg", ":reg<CR>", opts)
@@ -99,107 +99,107 @@ vim.keymap.set("n", "<leader>xp", "<cmd>!chmod +x %<CR>", opts)
 
 opts.desc = "Run Docker Pytest for Function"
 vim.keymap.set("n", "<leader>dm", function()
-	docker.run_pytest({ type = "function" })
+  docker.run_pytest { type = "function" }
 end, opts)
 opts.desc = "Run Docker Pytest for File"
 vim.keymap.set("n", "<leader>df", function()
-	docker.run_pytest({ type = "file" })
+  docker.run_pytest { type = "file" }
 end, opts)
 opts.desc = "Run Docker All Pytest"
 vim.keymap.set("n", "<leader>dpy", function()
-	docker.run_pytest({ type = "all" })
+  docker.run_pytest { type = "all" }
 end, opts)
 opts.desc = "Attach to Docker"
 vim.keymap.set("n", "<leader>da", function()
-	docker.attach_session()
+  docker.attach_session()
 end, opts)
 
 opts.desc = "Docker Show Containers"
 vim.keymap.set("n", "<leader>ds", function()
-	docker.show_containers()
+  docker.show_containers()
 end, opts)
 opts.desc = "Docker Image List"
 vim.keymap.set("n", "<leader>dil", function()
-	docker.list_image()
+  docker.list_image()
 end, opts)
 opts.desc = "Docker Network List"
 vim.keymap.set("n", "<leader>dnl", function()
-	docker.list_network()
+  docker.list_network()
 end, opts)
 opts.desc = "Docker Volume List"
 vim.keymap.set("n", "<leader>dvl", function()
-	docker.list_volume()
+  docker.list_volume()
 end, opts)
 opts.desc = "Docker Build Cache Prune"
 vim.keymap.set("n", "<leader>dpb", function()
-	docker.prune_build_cache()
+  docker.prune_build_cache()
 end, opts)
 opts.desc = "Docker Image Prune"
 vim.keymap.set("n", "<leader>dpi", function()
-	docker.prune_image()
+  docker.prune_image()
 end, opts)
 opts.desc = "Docker Network Prune"
 vim.keymap.set("n", "<leader>dpn", function()
-	docker.prune_network()
+  docker.prune_network()
 end, opts)
 opts.desc = "Docker Volume Prune"
 vim.keymap.set("n", "<leader>dpv", function()
-	docker.prune_volume()
+  docker.prune_volume()
 end, opts)
 opts.desc = "Docker System Prune"
 vim.keymap.set("n", "<leader>dps", function()
-	docker.prune_system()
+  docker.prune_system()
 end, opts)
 opts.desc = "Docker Container Prune"
 vim.keymap.set("n", "<leader>dpc", function()
-	docker.prune_container()
+  docker.prune_container()
 end, opts)
 opts.desc = "Docker Compose Build"
 vim.keymap.set("n", "<leader>dcb", function()
-	docker.build_containers()
+  docker.build_containers()
 end, opts)
 opts.desc = "Docker Compose Up"
 vim.keymap.set("n", "<leader>dcu", function()
-	docker.start_containers(false)
+  docker.start_containers(false)
 end, opts)
 opts.desc = "Docker Compose Up and Attach"
 vim.keymap.set("n", "<leader>dca", function()
-	docker.start_containers(true)
+  docker.start_containers(true)
 end, opts)
 opts.desc = "Docker Compose Down"
 vim.keymap.set("n", "<leader>dcd", function()
-	docker.stop_containers()
+  docker.stop_containers()
 end, opts)
 opts.desc = "Docker Compose Kill Single Container"
 vim.keymap.set("n", "<leader>dck", function()
-	docker.kill_container()
+  docker.kill_container()
 end, opts)
 opts.desc = "Docker Remove Container"
 vim.keymap.set("n", "<leader>drc", function()
-	docker.remove_container()
+  docker.remove_container()
 end, opts)
 opts.desc = "Docker Remove Image"
 vim.keymap.set("n", "<leader>dri", function()
-	docker.remove_image()
+  docker.remove_image()
 end, opts)
 opts.desc = "Docker Remove network"
 vim.keymap.set("n", "<leader>drn", function()
-	docker.remove_network()
+  docker.remove_network()
 end, opts)
 
 opts.desc = "Redo Last Makeit Task"
 vim.keymap.set("n", "<leader>mr", function()
-	makeit.make_redo()
+  makeit.make_redo()
 end, opts)
 
 opts.desc = "Toggle Inlay Hint"
 vim.keymap.set("n", "<leader>i", function()
-	vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+  vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
 end, opts)
 
 opts.desc = "Create GH Pull Request"
 vim.keymap.set("n", "<leader>ghpc", function()
-	require("core.gh").create_pr()
+  require("core.gh").create_pr()
 end, opts)
 
 opts.silent = false
@@ -212,7 +212,7 @@ vim.keymap.set("n", "<C-s>r", [[:cdo %s/<C-r><C-w>/<C-r>0/gcI<Left><Left><Left>]
 
 opts.desc = "Debugger Rust Testables"
 vim.keymap.set("n", "<leader>drt", function()
-	vim.cmd("RustLsp testables")
+  vim.cmd("RustLsp testables")
 end, opts)
 
 opts.desc = "Yank to System Clipboard"
@@ -222,4 +222,14 @@ opts.desc = "Delete to System Clipboard"
 vim.keymap.set({ "n", "v" }, "<leader>d", '"+d<CR>', opts)
 
 opts.desc = "Clean Buffers and Restart LSP"
-vim.keymap.set('n', '<leader>lc', ':CleanAndRestartLsp<CR>', opts)
+vim.keymap.set("n", "<leader>lc", ":CleanAndRestartLsp<CR>", opts)
+
+opts.desc = "SSH Tunnel"
+vim.keymap.set("n", "<C-t>", ":Tunnel<CR>", opts)
+opts.desc = "SSH Tunnel Stop"
+vim.keymap.set("n", "<C-t>s", ":TunnelStop<CR>", opts)
+opts.desc = "SSH Tunnel Status"
+vim.keymap.set("n", "<C-t>c", ":TunnelStatus<CR>", opts)
+
+opts.desc = "AWS SSO Login"
+vim.keymap.set("n", "<leader>sso", ":SSO<CR>", opts)
