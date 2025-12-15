@@ -11,6 +11,7 @@ return {
         require("luasnip.loaders.from_vscode").lazy_load()
       end,
     },
+    { "kristijanhusak/vim-dadbod-completion", ft = { "sql", "mysql", "plsql" }, lazy = true },
   },
   -- AND/OR build from source, requires nightly: https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
   -- build = 'cargo build --release',
@@ -53,16 +54,24 @@ return {
 
     -- Default list of enabled providers defined so that you can extend it
     -- elsewhere in your config, without redefining it, due to `opts_extend`
+    snippets = { preset = "luasnip" },
     sources = {
-      default = { "lazydev", "lsp", "path", "snippets", "buffer" },
-      providers = {
-        lazydev = {
-          name = "LazyDev",
-          module = "lazydev.integrations.blink",
-          -- make lazydev completions top priority (see `:h blink.cmp`)
-          score_offset = 100,
-        },
+      default = { "lsp", "path", "snippets", "buffer" },
+      per_filetype = {
+        sql = { "snippets", "dadbod", "buffer" },
       },
+      providers = {
+        dadbod = { name = "Dadbod", module = "vim_dadbod_completion.blink" },
+      },
+      -- default = { "lazydev", "lsp", "path", "snippets", "buffer" },
+      -- providers = {
+      --   lazydev = {
+      --     name = "LazyDev",
+      --     module = "lazydev.integrations.blink",
+      --     -- make lazydev completions top priority (see `:h blink.cmp`)
+      --     score_offset = 100,
+      --   },
+      -- },
     },
 
     -- (Default) Rust fuzzy matcher for typo resistance and significantly better performance

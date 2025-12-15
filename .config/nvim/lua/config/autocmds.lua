@@ -72,9 +72,9 @@ vim.api.nvim_create_autocmd("LspAttach", {
 			})
 		end
 
-		if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_completion, event.buf) then
-			vim.opt.completeopt = { "menu", "menuone", "preview", "noinsert", "noselect", "fuzzy", "popup" }
-			vim.lsp.completion.enable(true, client.id, event.buf, { autotrigger = true })
-		end
+		-- if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_completion, event.buf) then
+		-- 	vim.opt.completeopt = { "menu", "menuone", "preview", "noinsert", "noselect", "fuzzy", "popup" }
+		-- 	vim.lsp.completion.enable(true, client.id, event.buf, { autotrigger = true })
+		-- end
 	end,
 })
