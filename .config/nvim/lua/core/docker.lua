@@ -1,6 +1,10 @@
 local M = {}
 local dev = require("core.dev")
 local utils = require("core.utils")
+local win_utils = require("core.win")
+
+local uv = vim.uv
+local api = vim.api
 
 local container
 local port
@@ -42,6 +46,17 @@ local function run_docker_compose(option, cb)
   end
 end
 
+---@param args string[]
+---@param wrap boolean?
+---@param auto_close boolean?
+---@param on_success fun()?
+local function async_docker(args, wrap, auto_close, on_success)
+  ---@type JobConfig
+  local cfg = { cmd = "docker", args = args, cwd = vim.fn.getcwd() }
+
+  utils.execute_job({ job = cfg, auto_close = auto_close }, wrap, on_success)
+end
+
 local function load_dap()
   local ok, dap = pcall(require, "dap")
   assert(ok, "nvim-dap is required to use dap-python")
@@ -49,7 +64,7 @@ local function load_dap()
 end
 
 local function get_nodes(query_text, predicate)
-  local end_row = vim.api.nvim_win_get_cursor(0)[1]
+  local end_row = api.nvim_win_get_cursor(0)[1]
 
   local ft = vim.bo[0].filetype
   assert(ft == "python", "test_method of dap-python only works for python files, not " .. ft)
@@ -75,7 +90,7 @@ local function get_node_text(node)
   if row1 == row2 then
     row2 = row2 + 1
   end
-  local lines = vim.api.nvim_buf_get_lines(0, row1, row2, true)
+  local lines = api.nvim_buf_get_lines(0, row1, row2, true)
   if #lines == 1 then
     return (lines[1]):sub(col1 + 1, col2)
   end
@@ -171,7 +186,6 @@ end
 ---@param args table
 ---@param callback function
 local function execute_remote_docker_command(args, callback)
-  local uv = vim.uv
   local stdout = uv.new_pipe(false)
   local stderr = uv.new_pipe(false)
   assert(stdout, "Docker command 'docker " .. table.concat(args, " ") .. "failed: stdout pipe is nil")
@@ -258,7 +272,7 @@ local function execute_docker_command(docker_command, cb)
         error(stderr_message)
       end
 
-      local current_lines = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+      local current_lines = table.concat(api.nvim_buf_get_lines(bufnr, 0, -1, false))
       if current_lines == "" then
         vim.cmd("bdelete " .. bufnr)
       end
@@ -282,7 +296,7 @@ end
 local function get_docker_services(opts, cb)
   local_cwd = vim.fn.getcwd()
   local docker_compose_filepath = local_cwd .. "/docker-compose.yml"
-  local stat = vim.uv.fs_stat(docker_compose_filepath)
+  local stat = uv.fs_stat(docker_compose_filepath)
   if not stat or stat.type ~= "file" then
     error("docker-compose.yml not found at " .. docker_compose_filepath)
   end
@@ -381,12 +395,9 @@ end
 ---@param on_complete function | nil
 local function check_containers(message, up, delay, on_complete)
   local running_cmd = "docker compose ps --services --filter 'status=running' 2>/dev/null"
-  local exited_cmd = "docker compose ps --services --filter 'status=exited' 2>/dev/null"
 
   local running = vim.fn.system(running_cmd)
-  local exited = vim.fn.system(exited_cmd)
   running = running:gsub("^%s*(.-)%s*$", "%1") -- trim whitespace
-  exited = exited:gsub("^%s*(.-)%s*$", "%1")
 
   local check_complete = false
 
@@ -395,11 +406,6 @@ local function check_containers(message, up, delay, on_complete)
       vim.notify("All containers have been shut down")
       container = nil
       check_complete = true
-
-      if ShutDownTimer and not ShutDownTimer:is_closing() then
-        ShutDownTimer:close()
-        ShutDownTimer = nil
-      end
     end
   else -- Checking for startup
     -- Split the result into lines and check for your container
@@ -414,10 +420,6 @@ local function check_containers(message, up, delay, on_complete)
       if service == container then
         vim.notify("All containers are up and running.")
         check_complete = true
-        if StartUpTimer and not StartUpTimer:is_closing() then
-          StartUpTimer:close()
-          StartUpTimer = nil
-        end
         break
       end
     end
@@ -432,61 +434,6 @@ local function check_containers(message, up, delay, on_complete)
     on_complete()
   end
 end
--- 	if running == "" or running == "nil" then
--- 		if up then
--- 			vim.notify("No containers are running", 4)
--- 			if StartUpTimer and not StartUpTimer:is_closing() then
--- 				StartUpTimer:close()
--- 			end
--- 		else
--- 			vim.notify("All containers have been shut down")
--- 			container = nil
---
--- 			-- vim.defer_fn(function()
--- 			-- remove_docker_network()
--- 			-- end, 30000)
---
--- 			if ShutDownTimer and not ShutDownTimer:is_closing() then
--- 				ShutDownTimer:close()
--- 			end
--- 		end
---
--- 		check_complete = true
--- 	end
---
--- 	if up then
--- 		-- Split the result into lines
--- 		local lines = {}
--- 		for running_line in running:gmatch("[^\r\n]+") do
--- 			table.insert(lines, running_line)
--- 		end
--- 		for exited_line in exited:gmatch("[^\r\n]+") do
--- 			table.insert(lines, exited_line)
--- 		end
---
--- 		for _, line in ipairs(lines) do
--- 			if line == container then
--- 				vim.notify("All containers are up and running.")
--- 				check_complete = true
---
--- 				if StartUpTimer and not StartUpTimer:is_closing() then
--- 					StartUpTimer:close()
--- 				end
--- 			end
--- 		end
--- 	end
---
--- 	if not check_complete then
--- 		vim.notify(message)
---
--- 		-- Reschedule the function to run again after a delay
--- 		vim.defer_fn(function()
--- 			check_containers(message, up, delay, on_complete)
--- 		end, delay)
--- 	elseif on_complete ~= nil then
--- 		on_complete()
--- 	end
--- end
 
 -- Function to check if an individual container is running
 ---@param local_container string
@@ -590,7 +537,7 @@ end
 function M.get_docker_dependencies(opts, cb)
   local_cwd = vim.fn.getcwd()
   local pip_filepath = local_cwd .. "/pip.conf"
-  local stat = vim.uv.fs_stat(pip_filepath)
+  local stat = uv.fs_stat(pip_filepath)
 
   local callback = function()
     local artifact_ok, artifact_result = pcall(dev.artifact)
@@ -612,7 +559,7 @@ function M.get_docker_dependencies(opts, cb)
 end
 
 function M.show_containers()
-  local containers = vim.fn.system("docker ps")
+  local containers = vim.fn.system("docker ps -a")
 
   vim.notify(containers)
 end
@@ -685,57 +632,20 @@ end
 
 ---@param attach boolean
 function M.start_containers(attach)
-  if ShutDownTimer and not ShutDownTimer:is_closing() then
-    ShutDownTimer:close()
-  end
-
-  name = "Data API"
-
   get_docker_services({ action = "start" }, function()
     load_dap().defaults.python.exception_breakpoints = { "default" }
     local docker_command = string.format("docker compose up " .. container)
     run_docker_compose(docker_command, function()
-      StartUpTimer = vim.defer_fn(function()
-        -- Terminate the process if it takes longer than 5 minutes
-        vim.notify("Containers are taking too long to start. Please check the container statuses manually.")
-      end, 60000) -- 60000 milliseconds = 1 minutes
-
-      vim.notify("Checking container statuses...")
-
-      local on_complete
       if attach then
-        on_complete = get_port_and_attach
+        vim.notify("Checking container statuses...")
+        local message = "The " .. container .. " container is still booting up"
+
+        vim.defer_fn(function()
+          check_containers(message, true, 15000, get_port_and_attach)
+        end, 10000)
       end
-
-      local message = "The " .. container .. " container is still booting up"
-      -- Schedule the asynchronous function to be executed asynchronously in the next event loop iteration
-      vim.defer_fn(function()
-        check_containers(message, true, 15000, on_complete)
-      end, 10000)
     end)
-    -- assert(ok, result)
-
-    -- if container == "shared_payload_load_data" then
-    --     container = "shared_payload_data_api"
-    -- end
-
-    -- execute_docker_command(docker_command, function()
-    -- 	vim.notify("Data API listening at port: " .. port)
-    -- 	StartUpTimer = vim.defer_fn(function()
-    -- 		-- Terminate the process if it takes longer than 5 minutes
-    -- 		vim.notify("Containers are taking too long to start. Please check the container statuses manually.")
-    -- 	end, 300000) -- 300000 milliseconds = 5 minutes
-    --
-    -- 	vim.notify("Checking container statuses...")
-    --
-    -- 	local message = "The " .. container .. " container is still booting up"
-    -- 	-- Schedule the asynchronous function to be executed asynchronously in the next event loop iteration
-    -- 	vim.defer_fn(function()
-    -- 		check_containers(message, true, 15000)
-    -- 	end, 10000)
-    -- end)
   end)
-  -- end)
 end
 
 function M.remove_container()
@@ -748,52 +658,38 @@ function M.remove_container()
 end
 
 function M.kill_container()
-  if StartUpTimer and not StartUpTimer:is_closing() then
-    StartUpTimer:close()
-  end
-
   get_docker_containers(function(local_container)
-    local docker_command = string.format("docker kill " .. local_container)
     vim.notify("Shutting down " .. local_container .. " container")
-    local docker_coroutine = DockerCoroutine(docker_command)
-    coroutine.resume(docker_coroutine)
 
-    vim.notify("Checking container status...")
-
-    -- Schedule the asynchronous function to be executed asynchronously in the next event loop iteration
-    vim.defer_fn(function()
-      check_container(local_container)
-    end, 5000)
+    vim.system({ "docker", "kill", local_container }, {
+      cwd = vim.fn.getcwd(),
+      text = true,
+    }, function(result)
+      vim.schedule(function()
+        if result.code == 0 then
+          vim.notify("Successfully killed " .. local_container .. " container", vim.log.levels.INFO)
+        else
+          vim.notify(
+            string.format("Failed with code %d\n%s\n%s", result.code, result.stdout, result.stderr),
+            vim.log.levels.ERROR
+          )
+        end
+      end)
+    end)
   end)
 end
 
 function M.stop_containers()
-  if StartUpTimer and not StartUpTimer:is_closing() then
-    StartUpTimer:close()
-  end
-
   vim.ui.select({ "Yes", "No" }, { prompt = "Remove Volumes?" }, function(choice)
-    local docker_command = string.format("docker compose --profile '*' down --remove-orphans")
+    local args = { "compose", "--profile", "*", "down", "--remove-orphans" }
     if choice == "Yes" then
-      docker_command = string.format(docker_command .. " -v")
+      table.insert(args, "-v")
     end
+
     vim.notify("Shutting down all docker containers")
-    local docker_coroutine = DockerCoroutine(docker_command)
-    coroutine.resume(docker_coroutine)
+
+    local proc = async_docker(args, true, true)
   end)
-
-  ShutDownTimer = vim.defer_fn(function()
-    -- Terminate the process if it takes longer than 5 minutes
-    vim.notify("Containers are taking too long to shutdown. Please check the container statuses manually.")
-  end, 20000) -- milliseconds
-
-  vim.notify("Checking container statuses...")
-
-  local message = "Containers are still shutting down"
-  -- Schedule the asynchronous function to be executed asynchronously in the next event loop iteration
-  vim.defer_fn(function()
-    check_containers(message, false, 3000)
-  end, 1000)
 end
 
 function M.remove_image()

@@ -109,10 +109,8 @@ opts.desc = "Run Docker All Pytest"
 vim.keymap.set("n", "<leader>dpy", function()
   docker.run_pytest { type = "all" }
 end, opts)
-opts.desc = "Attach to Docker"
-vim.keymap.set("n", "<leader>da", function()
-  docker.attach_session()
-end, opts)
+opts.desc = "Attach using Debugpy"
+vim.keymap.set("n", "<leader>da", ":DebugpyAttach<CR>", opts)
 
 opts.desc = "Docker Show Containers"
 vim.keymap.set("n", "<leader>ds", function()

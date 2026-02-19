@@ -1,9 +1,3 @@
-local function get_project_root()
-  local cwd = vim.fn.getcwd()
-  local root_path = vim.fs.find({ ".venv", "uv.lock", "pyproject.toml" }, { upward = false, limit = 1, path = cwd })
-  return vim.fs.dirname(root_path[1]) or cwd
-end
-
 return {
   "mfussenegger/nvim-dap",
   dependencies = {
@@ -13,8 +7,6 @@ return {
   config = function()
     local dap = require("dap")
     local dappy = require("dap-python")
-
-    dap.set_log_level("TRACE")
 
     vim.fn.sign_define("DapBreakpoint", { text = "🛑", texthl = "", linehl = "", numhl = "" })
     vim.fn.sign_define("DapStopped", { text = "🤔", texthl = "", linehl = "", numhl = "" })
@@ -102,16 +94,14 @@ return {
       request = "attach",
       name = "Attach Data API",
       connect = function()
-        vim.notify(get_project_root())
         local host = vim.fn.input("Host [127.0.0.1]: ")
         host = host ~= "" and host or "127.0.0.1"
         local port = tonumber(vim.fn.input("Port [5678]: ")) or 5678
         return { host = host, port = port }
       end,
-      cwd = function() get_project_root() end,
       pathMappings = {
         {
-          localRoot = function() get_project_root() end,
+          localRoot = vim.fn.getcwd(),
           remoteRoot = "/code",
         },
       },
@@ -127,10 +117,9 @@ return {
         local port = tonumber(vim.fn.input("Port [5678]: ")) or 5678
         return { host = host, port = port }
       end,
-      cwd = get_project_root(),
       pathMappings = {
         {
-          localRoot = get_project_root(),
+          localRoot = vim.fn.getcwd(),
           remoteRoot = "/code",
         },
         {

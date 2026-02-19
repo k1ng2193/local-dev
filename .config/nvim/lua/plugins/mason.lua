@@ -42,10 +42,10 @@ return {
 				"lua_ls",
 				"sqlls",
 				"rust_analyzer",
-        "basedpyright",
 				"ruff",
 				"gopls",
         "clangd",
+        "ty",
 			},
 			automatic_enable = true,
 		})

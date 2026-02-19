@@ -220,3 +220,31 @@ vim.api.nvim_create_user_command("SSO", function()
     end, { buffer = bufnr, silent = true })
   end)
 end, {})
+
+vim.api.nvim_create_user_command("DebugpyAttach", function()
+  local dap = require("dap")
+
+  local host = vim.fn.input("Host [127.0.0.1]: ")
+  host = host ~= "" and host or "127.0.0.1"
+  local port = tonumber(vim.fn.input("Port [5678]: ")) or 5678
+
+  local cwd = vim.fn.getcwd()
+  local root_path = vim.fs.find({ ".venv", "uv.lock", "pyproject.toml" }, { upward = false, limit = 1, path = cwd })
+
+  vim.notify("Attaching to " .. host .. ":" .. port)
+
+  local config = {
+    type = "python",
+    request = "attach",
+    name = "Attach API",
+    connect = { host = host, port = port },
+    pathMappings = {
+      {
+        localRoot = vim.fs.dirname(root_path[1]) or cwd,
+        remoteRoot = "/code",
+      },
+    },
+  }
+
+  dap.run(config)
+end, {})

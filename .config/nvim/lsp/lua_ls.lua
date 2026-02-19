@@ -29,7 +29,14 @@ return {
 				globals = { "vim", "require" },
 				disable = { "unused-local" },
 			},
+      hint = {
+        enable = true,  -- Enable inlay hints
+      },
+      -- Key setting for strict type checking
+      type = {
+        castNumberToInteger = false,
+      },
 		},
 	},
-	log_level = vim.lsp.protocol.MessageType.Warning,
+	-- log_level = vim.lsp.protocol.MessageType.Warning,
 }

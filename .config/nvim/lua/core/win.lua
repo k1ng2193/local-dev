@@ -61,13 +61,21 @@ local function get_window_position(opts)
 	return positions[opts.placement]
 end
 
+---@class WindowConfig
+---@field placement Placement?
+---@field width_resize number? % of the win width relative to the editor
+---@field height_resize number? % of the win height relative to the editor
+---@field border Border?
+---@field title string?
+
 ---@param bufnr integer Buffer to display, or 0 for current buffer
----@param placement Placement 
----@param width_resize number % of the win width relative to the editor
----@param height_resize number % of the win height relative to the editor
----@param border Border
----@param title string?
-function M.open_floating_window(bufnr, placement, width_resize, height_resize, border, title)
+---@param cfg WindowConfig
+function M.open_floating_window(bufnr, cfg)
+  local placement = cfg.placement or "right"
+  local width_resize = cfg.width_resize or 0.3
+  local height_resize = cfg.height_resize or 1
+  local border = cfg.border or "single"
+
   local pos_opts = { placement = placement }
 	-- Get editor dimensions
 	pos_opts.width = vim.o.columns
@@ -86,7 +94,7 @@ function M.open_floating_window(bufnr, placement, width_resize, height_resize, b
 		col = pos.col,
 		style = "minimal",
 		border = border,
-    title = title,
+    title = cfg.title,
     title_pos = 'center',
 	}
 

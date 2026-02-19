@@ -1,5 +1,12 @@
 local M = {}
 
+local win_utils = require("core.win")
+
+local uv = vim.uv
+local api = vim.api
+
+M.active_processes = {}
+
 --- Given a string, convert 'slash' to 'inverted slash' if on windows, and vice versa on UNIX.
 -- Then return the resulting string.
 ---@param path string
@@ -69,8 +76,8 @@ end
 ---@return number
 function M.open_vertical_split()
   vim.cmd("vsplit") -- Open a vertical split
-  local bufnr = vim.api.nvim_create_buf(false, true) -- Create a new empty buffer
-  vim.api.nvim_win_set_buf(0, bufnr) -- Set the new buffer to the current window (vertical split)
+  local bufnr = api.nvim_create_buf(false, true) -- Create a new empty buffer
+  api.nvim_win_set_buf(0, bufnr) -- Set the new buffer to the current window (vertical split)
   return bufnr
 end
 
@@ -84,7 +91,7 @@ function M.split_multiline_string(str)
 end
 
 -- Function to stream data to the buffer
----@param bufnr number
+---@param bufnr integer
 ---@param data table
 function M.stream_to_buffer(bufnr, data)
   -- Process each line to ensure no newlines are present
@@ -97,10 +104,10 @@ function M.stream_to_buffer(bufnr, data)
   end
 
   -- Get current lines in the popup buffer
-  local current_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local current_lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
   -- Concatenate current lines with the new lines
   local updated_lines = vim.list_extend(current_lines, processed_data)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, updated_lines)
+  api.nvim_buf_set_lines(bufnr, 0, -1, false, updated_lines)
 end
 
 -- Function find a file
@@ -132,11 +139,19 @@ function M.find_path_for_file(file_name, max_depth, current_depth, start_path)
   end
 end
 
-function M.activate_venv()
+---@param bufnr integer
+---@param root_file string
+function M.activate_venv(bufnr, root_file)
   local cwd = vim.fn.getcwd()
-  local file_path = M.find_path_for_file("pyproject.toml", 2, 0, cwd)
-  local venv_path = file_path .. "/.venv"
+  local stop_dir = vim.fs.dirname(api.nvim_buf_get_name(bufnr))
+  local root_path = vim.fs.find({ root_file }, { path = cwd, stop = stop_dir })
+  if #root_path == 0 then
+    vim.notify("No python virtual environment found")
+    return
+  end
 
+  local venv_path = root_path[1]
+  vim.notify(venv_path)
   if vim.fn.isdirectory(venv_path) == 1 then
     -- Store old PATH to allow deactivation
     vim.env._OLD_VIRTUAL_PATH = vim.env.PATH
@@ -181,8 +196,9 @@ end
 ---@param on_dir function
 ---@param root_markers table
 function M.find_lsp_root_dir(bufnr, on_dir, root_markers)
-  local current_dir = vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr))
-  local root_path = vim.fs.find(root_markers, { upward = true, stop = current_dir })
+  local current_dir = vim.fs.dirname(api.nvim_buf_get_name(bufnr))
+  local root_path =
+    vim.fs.find(root_markers, { upward = true, path = current_dir, stop = vim.fs.dirname(vim.fn.getcwd()) })
   if root_path then
     on_dir(vim.fs.dirname(root_path[1]))
   end
@@ -191,7 +207,7 @@ end
 ---@class JobConfig
 ---@field cmd string
 ---@field args string[]
----@field cwd string
+---@field cwd string?
 
 ---@param bufnr integer
 ---@param opts JobConfig
@@ -201,13 +217,13 @@ function M.async_job(bufnr, opts, on_success)
   local cmd_str = opts.cmd .. " " .. table.concat(opts.args, " ")
   vim.notify("Executing " .. cmd_str, vim.log.levels.INFO)
 
-  local stdout = vim.uv.new_pipe(false)
-  local stderr = vim.uv.new_pipe(false)
+  local stdout = uv.new_pipe(false)
+  local stderr = uv.new_pipe(false)
   assert(stdout, "Command '" .. cmd_str .. "' failed: stdout pipe is nil")
   assert(stderr, "Command '" .. cmd_str .. "' failed: stderr pipe is nil")
 
   local handle
-  handle = vim.uv.spawn(opts.cmd, {
+  handle = uv.spawn(opts.cmd, {
     args = opts.args,
     cwd = opts.cwd,
     stdio = { nil, stdout, stderr },
@@ -219,13 +235,14 @@ function M.async_job(bufnr, opts, on_success)
       [9] = "SIGKILL",
       [15] = "SIGTERM",
     }
-    stdout:read_stop()
-    stderr:read_stop()
-    stdout:close()
-    stderr:close()
-    handle:close()
-
     vim.schedule(function()
+      stdout:read_stop()
+      stderr:read_stop()
+      stdout:close()
+      stderr:close()
+
+      M.active_processes[handle] = nil
+
       if signal ~= 0 then
         local signal_name = signal_names[signal] or ("signal " .. signal)
         vim.notify(string.format("Process terminated by %s (%d)", signal_name, signal), vim.log.levels.WARN)
@@ -235,19 +252,26 @@ function M.async_job(bufnr, opts, on_success)
           on_success()
         end
       else
-        vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, {
+        api.nvim_buf_set_lines(bufnr, -1, -1, false, {
           "",
           "--- Job failed with exit code: " .. code .. " ---",
         })
       end
     end)
+
+    if not handle then
+      vim.notify("Failed to spawn command: " .. cmd_str, vim.log.levels.ERROR)
+      return
+    end
   end)
+
+  M.active_processes[handle] = true
 
   stdout:read_start(function(err, data)
     if data then
       vim.schedule(function()
         local lines = vim.split(data, "\n", { trimempty = true })
-        vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
+        api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
       end)
     end
   end)
@@ -256,7 +280,7 @@ function M.async_job(bufnr, opts, on_success)
     if data then
       vim.schedule(function()
         local lines = vim.split(data, "\n", { trimempty = true })
-        vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
+        api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
       end)
     end
   end)
@@ -266,18 +290,75 @@ end
 
 ---@param proc uv.uv_process_t
 function M.kill_gracefully(proc)
-  proc:kill(15)
+  if M.active_processes[proc] then
+    proc:kill(15)
 
-  vim.defer_fn(function()
-    if proc and not proc:is_closing() then
-      proc:kill(2)
-      vim.defer_fn(function()
-        if proc and not proc:is_closing() then
-          proc:kill(9)
-        end
-      end, 2000)
+    vim.defer_fn(function()
+      if M.active_processes[proc] and not proc:is_closing() then
+        proc:kill(2)
+        vim.defer_fn(function()
+          if M.active_processes[proc] and not proc:is_closing() then
+            proc:kill(9)
+          end
+        end, 2000)
+      end
+    end, 3000)
+  end
+end
+
+---@class ExecuteOpts
+---@field job JobConfig
+---@field win WindowConfig?
+---@field auto_close boolean?
+
+---@param opts ExecuteOpts
+---@param wrap boolean?
+---@param on_success fun()?
+---@return uv.uv_process_t
+function M.execute_job(opts, wrap, on_success)
+  assert(opts.job, "Missing job config in 'opts'")
+  assert(opts.job.cmd, "Missing cmd in job config")
+  assert(opts.job.args, "Missing args in job config")
+
+  local bufnr = api.nvim_create_buf(false, true)
+  vim.bo[bufnr].filetype = opts.job.cmd
+  vim.bo[bufnr].bufhidden = "wipe"
+  vim.bo[bufnr].buftype = "nofile"
+
+  ---@type WindowConfig
+  opts.win = vim.tbl_extend(
+    "force",
+    opts.win or {},
+    { title = "Command: " .. opts.job.cmd .. " " .. table.concat(opts.job.args, " ") }
+  )
+  local win = win_utils.open_floating_window(bufnr, opts.win)
+
+  vim.wo[win].wrap = wrap or false
+  vim.wo[win].cursorline = true
+
+  if opts.auto_close then
+    local original_on_success = on_success
+
+    on_success = function()
+      if original_on_success then
+        original_on_success()
+      end
+
+      if vim.api.nvim_win_is_valid(win) then
+        vim.api.nvim_win_close(win, true)
+      end
     end
-  end, 3000)
+  end
+
+  local proc = M.async_job(bufnr, opts.job, on_success)
+
+  vim.keymap.set("n", "q", ":close<CR>", { buffer = bufnr, silent = true })
+  vim.keymap.set("n", "<Esc>", ":close<CR>", { buffer = bufnr, silent = true })
+  vim.keymap.set("n", "<C-c>", function()
+    M.kill_gracefully(proc)
+  end, { buffer = bufnr, silent = true })
+
+  return proc
 end
 
 return M
