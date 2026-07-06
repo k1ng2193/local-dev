@@ -73,7 +73,7 @@ function M.open_url(url)
 end
 
 -- Function to open a vertical split window and return the buffer number
----@return number
+---@return integer
 function M.open_vertical_split()
   vim.cmd("vsplit") -- Open a vertical split
   local bufnr = api.nvim_create_buf(false, true) -- Create a new empty buffer
@@ -103,11 +103,13 @@ function M.stream_to_buffer(bufnr, data)
     end
   end
 
-  -- Get current lines in the popup buffer
-  local current_lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
-  -- Concatenate current lines with the new lines
-  local updated_lines = vim.list_extend(current_lines, processed_data)
-  api.nvim_buf_set_lines(bufnr, 0, -1, false, updated_lines)
+  if api.nvim_buf_is_valid(bufnr) then
+    -- Get current lines in the popup buffer
+    local current_lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    -- Concatenate current lines with the new lines
+    local updated_lines = vim.list_extend(current_lines, processed_data)
+    api.nvim_buf_set_lines(bufnr, 0, -1, false, updated_lines)
+  end
 end
 
 -- Function find a file
@@ -151,7 +153,6 @@ function M.activate_venv(bufnr, root_file)
   end
 
   local venv_path = root_path[1]
-  vim.notify(venv_path)
   if vim.fn.isdirectory(venv_path) == 1 then
     -- Store old PATH to allow deactivation
     vim.env._OLD_VIRTUAL_PATH = vim.env.PATH
@@ -214,8 +215,9 @@ end
 ---@param on_success fun()?
 ---@return uv.uv_process_t
 function M.async_job(bufnr, opts, on_success)
+  local timeout = 500
   local cmd_str = opts.cmd .. " " .. table.concat(opts.args, " ")
-  vim.notify("Executing " .. cmd_str, vim.log.levels.INFO)
+  vim.notify("Executing " .. cmd_str, vim.log.levels.INFO, { timeout = timeout })
 
   local stdout = uv.new_pipe(false)
   local stderr = uv.new_pipe(false)
@@ -247,11 +249,11 @@ function M.async_job(bufnr, opts, on_success)
         local signal_name = signal_names[signal] or ("signal " .. signal)
         vim.notify(string.format("Process terminated by %s (%d)", signal_name, signal), vim.log.levels.WARN)
       elseif code == 0 then
-        vim.notify("Successfully executed " .. cmd_str, vim.log.levels.INFO)
+        vim.notify("Successfully executed " .. cmd_str, vim.log.levels.INFO, { timeout = timeout })
         if on_success ~= nil then
           on_success()
         end
-      else
+      elseif api.nvim_buf_is_valid(bufnr) then
         api.nvim_buf_set_lines(bufnr, -1, -1, false, {
           "",
           "--- Job failed with exit code: " .. code .. " ---",
@@ -270,8 +272,10 @@ function M.async_job(bufnr, opts, on_success)
   stdout:read_start(function(err, data)
     if data then
       vim.schedule(function()
-        local lines = vim.split(data, "\n", { trimempty = true })
-        api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
+        if api.nvim_buf_is_valid(bufnr) then
+          local lines = vim.split(data, "\n", { trimempty = true })
+          api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
+        end
       end)
     end
   end)
@@ -279,8 +283,10 @@ function M.async_job(bufnr, opts, on_success)
   stderr:read_start(function(err, data)
     if data then
       vim.schedule(function()
-        local lines = vim.split(data, "\n", { trimempty = true })
-        api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
+        if api.nvim_buf_is_valid(bufnr) then
+          local lines = vim.split(data, "\n", { trimempty = true })
+          api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
+        end
       end)
     end
   end)
