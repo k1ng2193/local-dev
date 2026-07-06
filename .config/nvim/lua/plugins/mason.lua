@@ -29,6 +29,7 @@ return {
 				"shellcheck",
 				"gci",
 				"golines",
+        "codelldb"
 			},
 		})
 
@@ -43,7 +44,7 @@ return {
 				"sqlls",
 				"rust_analyzer",
 				"ruff",
-				"gopls",
+				-- "gopls",
         "clangd",
         "ty",
 			},
